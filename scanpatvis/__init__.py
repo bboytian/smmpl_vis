@@ -9,8 +9,42 @@ from .hemisphere import hemisphere
 from ..globalimports import *
 
 
+## plot params
+_hem_alpha = 0.2
+_hemints_linewidth = 2
+
+_cone_alpha = 0.2
+_coneints_linewidth = _hemints_linewidth
+
+_grid_markersize = 5
+_grid_markeralpha = 0.2
+_grid_linewidth = 0.5
+_grid_linealpha = 0.6
+_grid_alpha = 0.4
+_grid_colorstartind = 6
+
+_aimlines_linewidth = 1
+_aimlines_alpha = 0.2
+_aimlines_linestyle = '-'
+_aimlines_color = 'k'
+_aimlines_markersize = _grid_markersize
+
+_aimlinescheck_linestyle, _aimlinescheck_linewidth = '-', 3
+_aimlinescheck_markersize = _grid_markersize
+_aimlinescheck_alpha, _aimlinescheck_color = 1, 'orange'
+
+_aimpath_linewidth = 1.5
+_aimpath_alpha = 0.3
+_aimpath_linestyle = '-'
+_aimpath_color = 'b'
+
+## other plot values
+_cone_height = 20        # [km]
+
+
+
 # main class
-class plotshapes:
+class scanpatvis:
 
     def __init__(
             self,
@@ -30,48 +64,15 @@ class plotshapes:
             gridind (int): determines which grid info to plot on specified 2d ax
                     (str): 'all', plots all grids info on 3d ax
             timeobj (scanpat_calc.timeobj)
-            sunforecaster (scanpat_calc.sunforecaster)
-            plotshapes_tg (scanpat_calc.targetgenerator.plotshapes)
+            sunforecaster (smmpl_opcodes.scanpat_calc.sunforecaster)
+            plotshapes_tg (smmpl_opcodes.scanpat_calc.targetgenerator.plotshapes)
         '''
-
-        ## plot params
-        hem_alpha = 0.2
-        hemints_linewidth = 2
-
-        cone_alpha = 0.2
-        coneints_linewidth = hemints_linewidth
-
-        grid_markersize = 5
-        grid_markeralpha = 0.2
-        grid_linewidth = 0.5
-        grid_linealpha = 0.6
-        grid_alpha = 0.4
-        grid_colorstartind = 6
-
-        aimlines_linewidth = 1
-        aimlines_alpha = 0.2
-        aimlines_linestyle = '-'
-        aimlines_color = 'k'
-        aimlines_markersize = grid_markersize
-
-        aimlinescheck_linestyle, aimlinescheck_linewidth = '-', 3
-        aimlinescheck_markersize = grid_markersize
-        aimlinescheck_alpha, aimlinescheck_color = 1, 'orange'
-
-        aimpath_linewidth = 1.5
-        aimpath_alpha = 0.3
-        aimpath_linestyle = '-'
-        aimpath_color = 'b'
-
-        ## other plot values
-        cone_height = 20        # [km]
 
         # object attributes
         self.to = timeobj
         self.sf = sunforecaster
 
 
-        # init
 
         ## scanpat_calc visualisation objects  using plotshapes_tg
         grid_lst_tg = plotshapes_tg.grid_lst
@@ -84,9 +85,9 @@ class plotshapes:
             grid_lst = [
                 grid(
                     ax,
-                    grid_linewidth, grid_linealpha,
-                    grid_markersize, grid_markeralpha,
-                    grid_alpha, 'C{}'.format(grid_colorstartind+i),
+                    _grid_linewidth, _grid_linealpha,
+                    _grid_markersize, _grid_markeralpha,
+                    _grid_alpha, 'C{}'.format(_grid_colorstartind+i),
 
                     grid_tg
                 ) for i, grid_tg in enumerate(grid_lst_tg)
@@ -94,43 +95,43 @@ class plotshapes:
         else:
             grid_obj = grid(
                 ax,
-                grid_linewidth, grid_linealpha,
-                grid_markersize, grid_markeralpha,
-                grid_alpha, 'C{}'.format(grid_colorstartind+gridind),
+                _grid_linewidth, _grid_linealpha,
+                _grid_markersize, _grid_markeralpha,
+                _grid_alpha, 'C{}'.format(_grid_colorstartind+gridind),
 
                 grid_lst_tg[gridind]
             )
 
         lidar_hem = hemisphere(
             ax, gridind,
-            hem_alpha, 'C3',
-            hemints_linewidth,
+            _hem_alpha, 'C3',
+            _hemints_linewidth,
 
             lidar_hem_tg
         )
         self.sun_cone = cone(
             ax, gridind,
             timeobj, sunforecaster,
-            cone_height,
+            _cone_height,
             True,               # swath_boo
-            cone_alpha, 'C1',
-            coneints_linewidth,
+            _cone_alpha, 'C1',
+            _coneints_linewidth,
 
             sun_cone_tg
         )
         self.targ_aimlines = aimlines(
             ax, gridind,
-            aimlines_linestyle, aimlines_linewidth,
-            aimlines_markersize,
-            aimlines_alpha, aimlines_color,
-            grid_colorstartind,
+            _aimlines_linestyle, _aimlines_linewidth,
+            _aimlines_markersize,
+            _aimlines_alpha, _aimlines_color,
+            _grid_colorstartind,
 
             targ_aimlines_tg
         )
         self.targ_aimpath = aimpath(
             ax, gridind,
-            aimpath_linestyle, aimpath_linewidth,
-            aimpath_alpha, aimpath_color,
+            _aimpath_linestyle, _aimpath_linewidth,
+            _aimpath_alpha, _aimpath_color,
 
             targ_aimpath_tg
         )
@@ -139,8 +140,8 @@ class plotshapes:
         ## other visualisation objects
         unit_hem = hemisphere(  # shows the blind range of the lidar
             ax, gridind,
-            hem_alpha, 'C2',
-            hemints_linewidth,
+            _hem_alpha, 'C2',
+            _hemints_linewidth,
 
             r=0.3,
             grid_lst=grid_lst_tg
@@ -148,10 +149,10 @@ class plotshapes:
         self.lidar_cone = cone(
             ax, gridind,
             timeobj, sunforecaster,
-            cone_height,
+            _cone_height,
             False,              # swath_boo
             1, 'C2',
-            coneints_linewidth*2,
+            _coneints_linewidth*2,
 
             thetas=0, phis=0,
             Thetas=0.005,
@@ -160,9 +161,9 @@ class plotshapes:
         if SHOWCHECKBOO:
             self.sp_aimlinescheck = aimlines_check(
                 ax, gridind,
-                aimlinescheck_linestyle, aimlinescheck_linewidth,
-                aimlinescheck_markersize,
-                aimlinescheck_alpha, aimlinescheck_color,
+                _aimlinescheck_linestyle, _aimlinescheck_linewidth,
+                _aimlinescheck_markersize,
+                _aimlinescheck_alpha, _aimlinescheck_color,
 
                 self.to.get_ts(),
                 targ_aimlines_tg

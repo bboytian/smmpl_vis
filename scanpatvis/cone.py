@@ -6,14 +6,14 @@ import numpy as np
 
 # params
 ## discretization params
-ZNUMSURF = 1
-PHINUMSURF = 1
-PHINUMINTS = 4
-RHONUMINTS = 1
-LNUMSWATH = 10
+_znumsurf = 1
+_phinumsurf = 1
+_phinumints = 4
+_rhonumints = 1
+_lnumswath = 10
 
-## default plot paramsA
-THETAS = 0.05                   # [rad]
+## default plot params
+_thetas = 0.05                   # [rad]
 
 
 # class
@@ -30,7 +30,7 @@ class cone:
 
             cone_tg=None,
             thetas=0, phis=0,
-            Thetas=THETAS,
+            Thetas=_thetas,
             grid_lst=[]
     ):
         '''
@@ -130,8 +130,8 @@ class cone:
         if self.proj3d_boo:
 
             # generating upright cone
-            znum = ZNUMSURF * int(self.r)
-            phinum = PHINUMSURF * int(self.r)
+            znum = _znumsurf * int(self.r)
+            phinum = _phinumsurf * int(self.r)
             z_mat, phi_mat = np.mgrid[0:self.r:znum*1j, 0:2*np.pi:phinum*1j]
             rho_mat = z_mat * np.tan(self.Thetas)
             x_ara = (rho_mat * np.cos(phi_mat)).flatten()
@@ -162,8 +162,8 @@ class cone:
 
             else:
                 # generating tilted cone slice
-                phinum = PHINUMINTS * int(h)
-                rhonum = RHONUMINTS * int(h)
+                phinum = _phinumints * int(h)
+                rhonum = _rhonumints * int(h)
 
                 phi_ara = np.linspace(0, 2*np.pi, phinum)
                 z_ara = h / (np.cos(self.thetas)\

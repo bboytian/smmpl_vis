@@ -3,9 +3,9 @@ import numpy as np
 
 
 # params
-THETANUMSURF = 2                # for discretisation
-PHINUMSURF = 1
-PHINUMINTS = 6
+_thetanumsurf = 2                # for discretisation
+_phinumsurf = 1
+_phinumints = 6
 
 
 # main class
@@ -22,7 +22,7 @@ class hemisphere:
             grid_lst=[]
     ):
         '''
-        has the option to plot a hemisphere without generating any masks if 
+        has the option to plot a hemisphere without generating any masks if
         hemisphere_tg is not specified
 
         Parameters
@@ -38,10 +38,10 @@ class hemisphere:
             hemisphere_tg (scanpat_calc.targetgenerator.hemisphere)
             r (float): radius of hemisphere for display purposes
             grid_lst (list): specified if we want intersection to be plotted
-        
+
         Methods
             plot: plot surface for 3d axes and intersection for 2d axes
-            
+
         '''
         # Attributes
         ## plot type
@@ -60,16 +60,16 @@ class hemisphere:
         if hemisphere_tg:
             self.r = hemisphere_tg.r  # assuming grids are static
             if gridind == 'all':
-                self.grid_lst = hemisphere_tg.grid_lst 
+                self.grid_lst = hemisphere_tg.grid_lst
             else:
                 self.grid_lst = [hemisphere_tg.grid_lst[gridind]]
         else:
             self.r = r
             if gridind == 'all':
-                self.grid_lst = grid_lst 
+                self.grid_lst = grid_lst
             else:
-                self.grid_lst = [grid_lst[gridind]]                
-            
+                self.grid_lst = [grid_lst[gridind]]
+
         # plotting
         self.plot()
 
@@ -77,13 +77,13 @@ class hemisphere:
     # plot meth
     def plot(self):
 
-        # plotting surface    
+        # plotting surface
         if self.proj3d_boo:
             if self.r <= 1:     # in case we are plotting a unit sphere
                 thetanum = 10
             else:
-                thetanum = THETANUMSURF * int(self.r)
-            phinum = PHINUMSURF * thetanum
+                thetanum = _thetanumsurf * int(self.r)
+            phinum = _phinumsurf * thetanum
             theta_mat, phi_mat = np.mgrid[0:np.pi/2:thetanum*1j,
                                           0:2*np.pi:phinum*1j]
             x_ara = (self.r * np.sin(theta_mat) * np.cos(phi_mat)).flatten()
@@ -105,7 +105,7 @@ class hemisphere:
             if self.r < h:      # grid lies above hemisphere
                 ints_plt = None
             else:
-                phinum = PHINUMINTS*int(h)        
+                phinum = _phinumints*int(h)
                 phi_ara = np.linspace(0, 2*np.pi, phinum)
                 x_ara = np.sqrt(self.r**2 - h**2) * np.cos(phi_ara)
                 y_ara = np.sqrt(self.r**2 - h**2) * np.sin(phi_ara)
