@@ -6,30 +6,34 @@ import pandas as pd
 
 from . import visualiser
 from .globalimports import *
+from .. import smmpl_opcodes as smmplop
 from ..smmpl_opcodes import scanpat_calc as spc
 
 
 # Params
 if REALTIMEBOO:
     _starttime = pd.Timestamp(dt.datetime.now())  # local time
-    _fps = REALTIMEFPS  # slow enough for animation to load
-    _equivtime = None
+    _deltatime = pd.Timedelta(REALDELTATIME, 's')
+    # _fps = REALTIMEFPS  # slow enough for animation to load
+    # _equivtime = None
     _interval = 0
 else:
     _starttime = pd.Timestamp(FAKETIMESTARTTIME)
-    _fps = FAKETIMEFPS  # defines temporal resolution of animation
-    _equivtime = pd.Timedelta(FAKETIMEEQUIVTIME, 's')  # duration of animation
+    _deltatime = pd.Timedelta(FAKEDELTATIME, 'm')
+    # _fps = FAKETIMEFPS  # defines temporal resolution of animation
+    # _equivtime = pd.Timedelta(FAKETIMEEQUIVTIME, 's')  # duration of animation
     _interval = FAKETIMEINTERVAL  # [s] define interval between frames
 _endtime = _starttime + pd.Timedelta(VISDURATION, 'h')
 
 
 # main func
 def main(
-    starttime=_starttime,
-    endtime=_endtime,
-    fps=_fps,
-    equivtime=_equivtime,
-    interval=_interval,
+        starttime=_starttime,
+        endtime=_endtime,
+        deltatime=_deltatime,
+        # fps=_fps,
+        # equivtime=_equivtime,
+        interval=_interval,
 ):
     '''
     Future
@@ -49,8 +53,9 @@ def main(
         'verb_boo': True,
         'starttime': starttime,
         'endtime': endtime,
-        'fps': fps,
-        'equivtime': equivtime,
+        # 'deltatime': deltatime,
+        # 'fps': fps,
+        # 'equivtime': equivtime,
     }
 
     # starting processes
@@ -61,13 +66,19 @@ def main(
     to = spc.timeobj(
         starttime,
         endtime,
-        UTCINFO,
-        pd.Timedelta(FINEDELTATIME, 'm'),
-        pd.Timedelta(SEGDELTA, 'm'),
-        fps=fps,
-        equivtime=equivtime,
+        smmplop.globalimports.UTCINFO,
+        None,
+        # pd.Timedelta(smmplop.globalimports.FINEDELTATIME, 'm'),
+        pd.Timedelta(smmplop.globalimports.SEGDELTA, 'm'),
+        deltatime,
+        # fps=fps,
+        # equivtime=equivtime,
     )
-    sf = spc.sunforecaster(LATITUDE, LONGITUDE, ELEVATION)
+    sf = spc.sunforecaster(
+        smmplop.globalimports.LATITUDE,
+        smmplop.globalimports.LONGITUDE,
+        smmplop.globalimports.ELEVATION
+    )
     vis = visualiser(  # this runs the animation straight away
         to,
         sf,

@@ -105,12 +105,12 @@ class visualiser:
         self.animation3d = pan.FuncAnimation(
             fig3d, self.update,
             interval=self.interval,
-            frames=np.arange(self.to.equivtime.total_seconds()*self.to.fps)
+            frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
         self.animation2d = pan.FuncAnimation(
             fig2d, self.update,
             interval=self.interval,
-            frames=np.arange(self.to.equivtime.total_seconds()*self.to.fps)
+            frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
         plt.show()
 
@@ -177,7 +177,7 @@ class visualiser:
         '''
         this accounts for any temporary lag in computation which crosses over
         into the next timestamp
-        tip: fps shld be chosen such that computation is able to catch up in
+        tip: deltatime shld be chosen such that computation is able to catch up in
         the next frame
         '''
         waittime = (

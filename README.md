@@ -1,18 +1,20 @@
 scan_vis
 ========
 
-A program to visualise whatever calculations taking place in
-scanpat_calc, as well as any live updates from the lidar using scan_event
+A program to visualise whatever that is related to the smmpl.
+This will be treated as a non-operational, and dependent package.
+
+As such, it will not be adding any submodules from the other packages,
+but will be importing them relatively.
+This requires that the package be placed in the same root directory as its
+dependencies
 
 
 Feature Requests
 ----------------
-- scan_event queue object incorporation
+- scan_event live data update
 
 - Make a never ending realtime function, which limits the number of
   objects in the queue.
 
-- visualisation objects to follow scanpat_calc if we are visualising
-  customizable points
-
-- optimise by removing redundancies
+- product calc, spherical data
