@@ -42,6 +42,8 @@ class visualiser:
         self.realtime_boo = self.to.get_realtimeboo()
         self.utcinfo = self.to.get_utcinfo()
 
+        self.viewazimuth = VIEWAZIMUTHSTART
+
 
         # init
 
@@ -74,6 +76,13 @@ class visualiser:
         #     ax.set_ylim([-axlim, axlim])
         #     ax.margins(0)
 
+        self.ax3d_l = [ax3d]
+        self.fig3d_l = [fig3d]
+        self.tstxt_l = [ax3d.text(
+            0, 0, CURLYL, self.to.get_ts()
+        )
+                        for i, ax3d in enumerate(self.ax3d_l)]
+
         ## visobjects init_vis
         for visobject in self.visobjects:
             visobject.init_vis([ax3d, *axs2d])
@@ -85,11 +94,12 @@ class visualiser:
             interval=self.interval,
             frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
-        # self.animation2d = pan.FuncAnimation(
-        #     fig2d, self.update,
-        #     interval=self.interval,
-        #     frames=np.arange(self.to.equivtime.total_seconds()*self.to.fps)
-        # )
+        self.animation3d.save(
+            '/home/tianli/Desktop/trial.mp4',
+            # writer=pan.FFMpegWriter(fps=10),
+            'ffmpeg', fps=VIDEOFPS
+        )
+
         plt.show()
 
     def update(self, scapegoat):
@@ -110,8 +120,6 @@ class visualiser:
 
             if tosegstop_boo:              # stop plotting
                 self.animation3d.event_source.stop()
-                # self.animation2d.event_source.stop()
-                # plt.close()
 
         # update for toseg
             else:
@@ -128,8 +136,23 @@ class visualiser:
 
 
     def update_ts(self):
+
+        for ax3d in self.ax3d_l:
+
+            self.viewazimuth += VIEWROTDISCRETE
+            if self.viewazimuth > 360:
+                self.viewazimuth -= 360
+            ax3d.view_init(VIEWELEVATION, self.viewazimuth)
+
         for visobject in self.visobjects:
             visobject.update_ts()
+
+        for tstxt in self.tstxt_l:
+            tstxt.remove()
+        self.tstxt_l = [ax3d.text(
+            0, 0, CURLYL, self.to.get_ts()
+        )
+                        for i, ax3d in enumerate(self.ax3d_l)]
 
     def update_toseg(self):
         for visobject in self.visobjects:
