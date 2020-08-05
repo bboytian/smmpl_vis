@@ -1,11 +1,15 @@
 # imports
 from functools import wraps
+from glob import glob
+import os.path as osp
+import re
 import sys
+
+import numpy as np
 
 from ._modifications import *
 
 
-# defining decorators for global functions
 def haltlogging(func):
     '''
     Halts redirection of stdout and stderr logfiles and outputs to __stdout__ and
@@ -23,6 +27,100 @@ def haltlogging(func):
 
 
 # defining functions
+
+def FINDFILESFN(ufmtfilename, directories, *fieldsd):
+    '''
+    finds files in the stated directory using glob of a wildcard expression of the
+    unformatted filename
+
+    Parameters
+        ufmtfilename (str): filename unformatted field entries
+        directories (str or list of strings): directories we are searching in
+        fieldsd (dict): contains fields in which we want to fill with entries,
+                        leaving wild card for all other unspecified entries
+                        keys are field indexes, values are the field inputs
+
+    Return
+        list of file directories with the expression fiven in filename
+    '''
+    # filling in fields if specified
+    try:
+        fieldsd = fieldsd[0]
+        field_l, del_l = DIRPARSEFN(ufmtfilename, retdelimboo=True)
+        for key, value in fieldsd.items():
+            field_l[key] = field_l[key].format(value)
+        filename = ''.join([x for y in zip(del_l, field_l) for x in y])
+    except IndexError:
+        filename = ufmtfilename
+
+    # replacing fields with asterisk
+    filename = re.sub('{.*?}', '*', filename)
+
+    # finding files
+    if type(directories) in [list, np.ndarray]:
+        return np.concatenate(
+            [glob(DIRCONFN(dire, filename)) for dire in directories], axis=0
+        )
+    else:
+        return glob(DIRCONFN(directories, filename))
+
+
+def DIRPARSEFN(
+        dirstr=None, fieldsli=slice(None), delimiters='(\W|_)', retdelimboo=False
+):
+    '''
+    parenthesis in delimeters garantees that we are keeping the delimeters
+
+    Parameters
+        dirstr (str or array of str): for parsing, can also parse array of strings
+        fieldsli (int or slice): returns fields specified
+        delimeter (str): has to follow the requirements of re.split
+        retdelimboo (boolean): decides whether or not to return delimeters
+
+    Return
+        dirstr (str) -> parsed string [, parsed strings]
+        dirstr (array like) -> array of parsed strings [, list of parsed strings]
+                               dtype == object
+        dirstr (None) -> function to be used as key for sorting or mapping
+    '''
+    # params
+    fmtspecflag = 'FORMATSPECIFIERFLAG'
+
+    # operations
+    if type(dirstr) in [list, np.ndarray]:
+        try:
+            return np.vectorize(DIRPARSEFN)(
+                dirstr, fieldsli, delimiters, retdelimboo
+            )
+        except ValueError:
+            raise ValueError('when working with arrays of strings, fieldsli must'
+                             f' be an integer index, right now {fieldsli=}')
+    elif not dirstr:
+        return lambda x: DIRPARSEFN(x, fieldsli, delimiters)
+    else:
+        dirstr = osp.basename(dirstr)
+        # first replace format specifiers to something else before splitting
+        fmtspec_l = re.findall('{.*?}', dirstr)
+        dirstr = re.sub('{.*?}', fmtspecflag, dirstr)
+        field_l = re.split(delimiters, dirstr)
+        # replace back the format specifiers after splitting
+        field_l = [
+            re.sub(fmtspecflag, fmtspec_l.pop(0), fielde)
+            if fmtspecflag in fielde
+            else fielde
+            for fielde in field_l
+        ]
+        # parsing
+        try:
+            del_l = [''] + field_l[1::2]  # first field has no delimeter
+        except IndexError:                # single field string
+            del_l = ['']
+        field_l = field_l[::2]
+        if retdelimboo:
+            return field_l[fieldsli], del_l[fieldsli]
+        else:
+            return field_l[fieldsli]
+
 
 def DIRCONFN(*dirl):
     '''
@@ -46,10 +144,9 @@ def DIRCONFN(*dirl):
                     path += dirstr
                 else:
                     path += '/' + dirstr
-
     return path
 
-import datetime as dt
+
 def SETLOGFN(stdoutlog=None, stderrlog=None):
     if stdoutlog:               # setting new logfile
         SETLOGFN()
@@ -106,51 +203,19 @@ def GETRESPONSEFN(message, exitboo, twiceboo, checkboo=False, prevmsg=None):
             print('Enter either y or n\n')
 
 
+def PROGRESSFN(val, maxval, label):
+    n_bar = 40  # size of progress bar
+    j = val / maxval
+    sys.stdout.write('\r')
+    bar = '█' * int(n_bar * j)
+    bar = bar + '-' * int(n_bar * (1-j))
+    sys.stdout.write(f"{label.ljust(10)} | [{bar:{n_bar}s}] {int(100 * j)}% ")
+    sys.stdout.flush()
+
+
 # testing
 if __name__ == '__main__':
-    # from .params import *
 
-    # print('{}'.format(DIRCONFN(WINDOWFILESDIR, SEDFILE)))
-
-    # Process class
-    import multiprocessing as mp
-    class _procwrapper(mp.Process):
-        '''
-        To be used in a way similar to multiprocessing.Process.
-        It logs the print statements in the specified logfiles
-        '''
-        def __init__(self, logfile, target, args=(), kwargs={}):
-            print(
-                '{:%Y%m%d%H%M} run {}.{}...'.
-                format(dt.datetime.now(), target.__module__, target.__name__)
-            )
-            super().__init__(target=target, args=args, kwargs=kwargs)
-            self.logfile = logfile
-
-        def run(self):
-            '''
-            This runs on self.start() in a new process
-            '''
-            SETLOGFN(self.logfile)
-            if self._target:
-                self._target(*self._args, **self._kwargs)
-            SETLOGFN()
-
-    mainlog = 'C:/Users/mpluser/Desktop/mainlog.txt'
-    print('main func is running')
-    SETLOGFN(mainlog)
-    def play_func():
-        print('play_func')
-    pplay_func = _procwrapper(
-        'C:/Users/mpluser/Desktop/playfunc.txt', play_func
-    )
-    pplay_func.start()
-    pplay_func.join()
-
-    SETLOGFN('C:/Users/mpluser/Desktop/sublog.txt')
-    print('pretend sub func is running')
-    GETRESPONSEFN('this is a test?', True, True)
-    SETLOGFN(mainlog)
-    print('main func is running', flush=True)
-    import time
-    time.sleep(10)
+    teststr = '{1:2}_{}_{!@}_dsa.txt'
+    print(DIRPARSEFN([teststr, teststr], fieldsli=2, retdelimboo=True))
+    # print(DIRPARSEFN(teststr))

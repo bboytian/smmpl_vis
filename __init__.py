@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-from . import plotshapes as ps
+# from . import plotshapes as ps
 from .globalimports import *
 
 # class
@@ -43,6 +43,7 @@ class visualiser:
 
 
         # init
+        '''ADD IN THE TIMESTAMP PRINTS'''
 
         ## figure creation
         fig3d = plt.figure(figsize=(10, 10), constrained_layout=True)
@@ -126,6 +127,9 @@ class visualiser:
 
 
     def update_ts(self):
+        '''
+        ADD IN THE TIMESTAMP PRINTS
+        '''
         '''call on vis object update function here'''
         pass
 
