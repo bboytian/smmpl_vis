@@ -5,11 +5,11 @@ SCALE = 1.3                     # scaling for 2D axis display size
 # __main__
 REALTIMEBOO = False
 REALDELTATIME = 0.5             # [s]
-FAKETIMESTARTTIME = '2020-07-21 10:00:00'
+FAKETIMESTARTTIME = '202008050000'
 UTCINFO = 8                     # [hrs]
-FAKEDELTATIME = 20              # [s]
+FAKEDELTATIME = 10              # [m]
 FAKETIMEINTERVAL = 0
-VISDURATION = 2                 # [hr]
+VISDURATION = 12                 # [hr]
 
 ## plotshapes.__init__
 SHOWCHECKBOO = False            # cannot be True if running visualisation for

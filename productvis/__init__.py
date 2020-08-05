@@ -14,7 +14,7 @@ from ...solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 # params
 _dataf = nrb_calc
 _readduration = pd.Timedelta(1, 'h')
-_initreaddatatimes = 5
+_initreaddatatimes = 1
 _inittimeout = 2                # [s]
 
 _colormap = 'Blues'
@@ -97,12 +97,15 @@ class productvis():
 
         ## starting data queue if the data stock is low
         if self.data_queue.qsize() < _initreaddatatimes:
-            try:                # runnning one data queue at each time
-                self.queuedata_proc.join()
-            except AttributeError:  # first process to be called
-                self.queuedata_proc = mp.Process(target=self._queue_data,
-                                                 args=(_initreaddatatimes,))
-                self.queuedata_proc.start()
+            self._queue_data(_initreaddatatimes)
+            # try:                # runnning one data queue at each time
+            #     print('trying to queue')
+            #     raise AttributeError
+            #     # self.queuedata_proc.join()
+            # except AttributeError:  # first process to be called
+            #     self.queuedata_proc = mp.Process(target=self._queue_data,
+            #                                      args=(_initreaddatatimes,))
+            #     self.queuedata_proc.start()
 
         # storing new values
         self.ts_ta = self.data_d['Timestamp']
@@ -150,9 +153,9 @@ class productvis():
 
             # update the next timestamp
             self.dataplotind += 1
-            self.dataplotts = self.ts_ta[self.dataplotind]
             if self.dataplotind >= self.datalen:
                 self._get_data()
+            self.dataplotts = self.ts_ta[self.dataplotind]
 
     def update_toseg(self):
         pass

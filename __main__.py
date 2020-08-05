@@ -19,7 +19,7 @@ if REALTIMEBOO:
     _interval = 0
 else:
     _starttime = pd.Timestamp(FAKETIMESTARTTIME)
-    _deltatime = pd.Timedelta(FAKEDELTATIME, 's')
+    _deltatime = pd.Timedelta(FAKEDELTATIME, 'm')
     _interval = FAKETIMEINTERVAL  # [s] define interval between frames
 _endtime = _starttime + pd.Timedelta(VISDURATION, 'h')
 
@@ -43,7 +43,7 @@ def main(
 
     # vis protocol object
     ## product_calc
-    productcalc_vis = productvis('SNR_tra', to, 'smmpl_E2', smmpl_reader)
+    productcalc_vis = productvis('SNR2_tra', to, 'smmpl_E2', smmpl_reader)
 
     # begin animation
     vis = visualiser(  # this runs the animation straight away
