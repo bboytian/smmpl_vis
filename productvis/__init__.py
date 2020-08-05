@@ -14,7 +14,7 @@ from ...solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 # params
 _dataf = nrb_calc
 _readduration = pd.Timedelta(1, 'h')
-_initreaddatatimes = 1
+_initreaddatatimes = 5
 _inittimeout = 2                # [s]
 
 _colormap = 'Blues'
@@ -160,6 +160,10 @@ class productvis():
     def _plot_data(self):
         for ax in self.ax_l:
             # remove previous plots
+            try:
+                self.plot_d[self.dir_tup].remove()
+            except KeyError:
+                pass
 
             # plot new plot
             self.plot_d[self.dir_tup] = ax.scatter(

@@ -6,8 +6,10 @@ import pandas as pd
 
 from . import visualiser
 from .globalimports import *
+from .productvis import productvis
 from .. import smmpl_opcodes as smmplop
 from ..smmpl_opcodes import scanpat_calc as spc
+from ..solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 
 
 # Params
@@ -17,7 +19,7 @@ if REALTIMEBOO:
     _interval = 0
 else:
     _starttime = pd.Timestamp(FAKETIMESTARTTIME)
-    _deltatime = pd.Timedelta(FAKEDELTATIME, 'm')
+    _deltatime = pd.Timedelta(FAKEDELTATIME, 's')
     _interval = FAKETIMEINTERVAL  # [s] define interval between frames
 _endtime = _starttime + pd.Timedelta(VISDURATION, 'h')
 
@@ -29,36 +31,25 @@ def main(
         deltatime=_deltatime,
         interval=_interval,
 ):
-
-    # vis protocol object
-
-    ## scanpattern
-
-    ## nrb data
-
-    visprotobj_l = []
-
     # vis objects under main thread
     to = spc.timeobj(
         starttime,
         endtime,
-        smmplop.globalimports.UTCINFO,
+        UTCINFO,
         None,
         pd.Timedelta(smmplop.globalimports.SEGDELTA, 'm'),
         deltatime,
     )
-    sf = spc.sunforecaster(
-        smmplop.globalimports.LATITUDE,
-        smmplop.globalimports.LONGITUDE,
-        smmplop.globalimports.ELEVATION
-    )
+
+    # vis protocol object
+    ## product_calc
+    productcalc_vis = productvis('SNR_tra', to, 'smmpl_E2', smmpl_reader)
+
+    # begin animation
     vis = visualiser(  # this runs the animation straight away
         to,
-        sf,
-        qscanpat,
-        qscanevent,
         interval,
-        *visprotobj_l
+        productcalc_vis
     )
 
 

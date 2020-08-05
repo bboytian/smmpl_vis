@@ -16,7 +16,7 @@ class visualiser:
 
     def __init__(
             self,
-            timeobj, sunforecaster,
+            timeobj,
             interval=0,
             *visobjects
     ):
@@ -25,27 +25,28 @@ class visualiser:
         2. timeobj is manipulated here and only here
 
         Future
-            - has to be able to get scan position from scan_event, when
-               seperated into another package
+            - see whether we can derive realtime_boo internally, and not from
+              timeobj
 
         Parameters
             timeobj (scanpat_calc.timeobj)
-            sunforecaster (scanpat_calc.sunforecaster)
             interval (float): [ms] interval between frames by during animation
             visobjects: visualisation objects, each object symbolising a
                         visualisation protocol
         '''
         # Attributes
         self.to = timeobj
+        self.interval = interval
+        self.visobjects = visobjects
+
         self.realtime_boo = self.to.get_realtimeboo()
         self.utcinfo = self.to.get_utcinfo()
-        self.interval = interval
 
 
         # init
-        '''ADD IN THE TIMESTAMP PRINTS'''
 
         ## figure creation
+        ### 3d plot
         fig3d = plt.figure(figsize=(10, 10), constrained_layout=True)
         ax3d = fig3d.add_subplot(111, projection='3d')
         ax3d.pbaspect = [SCALE, SCALE, SCALE]
@@ -55,40 +56,40 @@ class visualiser:
         ax3d.set_ylim([-CURLYL/2, CURLYL/2])
         ax3d.set_zlim([0, CURLYL])
 
-        '''init visobject here'''
-
         ### grid projection visualisation plot
-        lengrid_lst_tg = len(self.ps_tg.grid_lst)
-        ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
-        fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
-        try:                    # handles the event where we only have one grid
-            axs2d = axs2d.flatten()
-        except AttributeError:
-            axs2d = [axs2d]
-        for i in range(lengrid_lst_tg):
-            ax = axs2d[i]
-            ax.set_xlabel('South -- North')
-            ax.set_ylabel('East -- West')
-            axlim = self.ps_tg.grid_lst[i].l/2 * 1.2
-            ax.set_xlim([-axlim, axlim])
-            ax.set_ylim([-axlim, axlim])
-            ax.margins(0)
+        axs2d = []
+        # lengrid_lst_tg = len(self.ps_tg.grid_lst)
+        # ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
+        # fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
+        # try:                    # handles the event where we only have one grid
+        #     axs2d = axs2d.flatten()
+        # except AttributeError:
+        #     axs2d = [axs2d]
+        # for i in range(lengrid_lst_tg):
+        #     ax = axs2d[i]
+        #     ax.set_xlabel('South -- North')
+        #     ax.set_ylabel('East -- West')
+        #     axlim = self.ps_tg.grid_lst[i].l/2 * 1.2
+        #     ax.set_xlim([-axlim, axlim])
+        #     ax.set_ylim([-axlim, axlim])
+        #     ax.margins(0)
 
-            '''init vis object here'''
-
+        ## visobjects init_vis
+        for visobject in self.visobjects:
+            visobject.init_vis([ax3d, *axs2d])
 
 
         # show
         self.animation3d = pan.FuncAnimation(
             fig3d, self.update,
             interval=self.interval,
-            frames=np.arange(self.to.equivtime.total_seconds()*self.to.fps)
+            frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
-        self.animation2d = pan.FuncAnimation(
-            fig2d, self.update,
-            interval=self.interval,
-            frames=np.arange(self.to.equivtime.total_seconds()*self.to.fps)
-        )
+        # self.animation2d = pan.FuncAnimation(
+        #     fig2d, self.update,
+        #     interval=self.interval,
+        #     frames=np.arange(self.to.equivtime.total_seconds()*self.to.fps)
+        # )
         plt.show()
 
     def update(self, scapegoat):
@@ -109,8 +110,8 @@ class visualiser:
 
             if tosegstop_boo:              # stop plotting
                 self.animation3d.event_source.stop()
-                self.animation2d.event_source.stop()
-                plt.close()
+                # self.animation2d.event_source.stop()
+                # plt.close()
 
         # update for toseg
             else:
@@ -127,14 +128,12 @@ class visualiser:
 
 
     def update_ts(self):
-        '''
-        ADD IN THE TIMESTAMP PRINTS
-        '''
-        '''call on vis object update function here'''
-        pass
+        for visobject in self.visobjects:
+            visobject.update_ts()
 
     def update_toseg(self):
-        '''call on vis object update toseg here'''
+        for visobject in self.visobjects:
+            visobject.update_toseg()
 
     def wait(self):
         '''

@@ -11,17 +11,17 @@ class grid:
             linewidth, linealpha,
             markersize, markeralpha,
             alpha, color,
-            grid_tg,            
+            grid_tg,
     ):
         '''
         Parameters
-            ax (matplotlib.pyplot.axes)     
+            ax (matplotlib.pyplot.axes)
             linewidth (float): linewidth of grid
             linealpha (float): alpha of grid lines
             markersize (float): size of aimpoints on grid
             markeralpha (float): alpha of aimpoints on grid
             alpha (float): alpha of plane
-            color (str): color of all plots        
+            color (str): color of all plots
 
             grid_tg (scanpat_calc.targetgenerator.grid)
         Methods
@@ -30,7 +30,7 @@ class grid:
         # Attributes
         ## plot type
         self.ax = ax
-        self.proj3d_boo = '3d' in ax.name        
+        self.proj3d_boo = '3d' in ax.name
 
         ## plot display settings
         self.markersize, self.markeralpha = markersize, markeralpha
@@ -49,10 +49,10 @@ class grid:
         self.x_ara, self.y_ara = grid_tg.x_ara, grid_tg.y_ara
         self.z_ara = grid_tg.z_ara
         self.h = grid_tg.h
-        
+
         # plotting
         self.plot()
-    
+
 
     #  plot meth
     def plot(self):
@@ -62,14 +62,14 @@ class grid:
 
             # plotting plane
             xp_ara = self.xp_mat.flatten()
-            yp_ara = self.yp_mat.flatten()    
-            zp_ara = self.h*np.ones_like(xp_ara)          
+            yp_ara = self.yp_mat.flatten()
+            zp_ara = self.h*np.ones_like(xp_ara)
             plane_plt = self.ax.plot_trisurf(
                 xp_ara, yp_ara, zp_ara,
                 linewidth=0, alpha=self.alpha, color=self.color
             )
 
-            # plotting grid        
+            # plotting grid
             grid_plt = self.ax.plot_wireframe(
                 self.xg_mat, self.yg_mat, self.zg_mat,
                 linewidth=self.linewidth,
@@ -106,13 +106,10 @@ class grid:
             scat_plt = self.ax.plot(
                 self.x_ara, self.y_ara, 'o',
                 markersize=self.markersize,
-                alpha=self.markeralpha, color=self.color, 
+                alpha=self.markeralpha, color=self.color,
             )
 
-        # Storing 
+        # Storing
         self.grid_plt = grid_plt
         self.plane_plt = plane_plt
         self.scat_plt = scat_plt
-
-    
-        
