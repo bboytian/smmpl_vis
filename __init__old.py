@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 from . import plotshapes as ps
-from .globalimports import *
+from .global_imports import *
 
 # params
 CURLYL = 30                     # plot limits of 2D axis

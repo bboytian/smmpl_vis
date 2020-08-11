@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from ..globalimports import *
+from ..global_imports import *
 
 
 # supp function

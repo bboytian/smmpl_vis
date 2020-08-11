@@ -5,7 +5,7 @@ import datetime as dt
 import pandas as pd
 
 from . import visualiser
-from .globalimports import *
+from .global_imports import *
 from .. import smmpl_opcodes as smmplop
 from ..smmpl_opcodes import scanpat_calc as spc
 
@@ -66,18 +66,18 @@ def main(
     to = spc.timeobj(
         starttime,
         endtime,
-        smmplop.globalimports.UTCINFO,
+        smmplop.global_imports.UTCINFO,
         None,
-        # pd.Timedelta(smmplop.globalimports.FINEDELTATIME, 'm'),
-        pd.Timedelta(smmplop.globalimports.SEGDELTA, 'm'),
+        # pd.Timedelta(smmplop.global_imports.FINEDELTATIME, 'm'),
+        pd.Timedelta(smmplop.global_imports.SEGDELTA, 'm'),
         deltatime,
         # fps=fps,
         # equivtime=equivtime,
     )
     sf = spc.sunforecaster(
-        smmplop.globalimports.LATITUDE,
-        smmplop.globalimports.LONGITUDE,
-        smmplop.globalimports.ELEVATION
+        smmplop.global_imports.LATITUDE,
+        smmplop.global_imports.LONGITUDE,
+        smmplop.global_imports.ELEVATION
     )
     vis = visualiser(  # this runs the animation straight away
         to,

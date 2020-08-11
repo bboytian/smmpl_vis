@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
 # from . import plotshapes as ps
-from .globalimports import *
+from .global_imports import *
 
 # class
 class visualiser:
@@ -94,11 +94,11 @@ class visualiser:
             interval=self.interval,
             frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
-        self.animation3d.save(
-            '/home/tianli/Desktop/trial.mp4',
-            # writer=pan.FFMpegWriter(fps=10),
-            'ffmpeg', fps=VIDEOFPS
-        )
+        # self.animation3d.save(
+        #     '/home/tianli/Desktop/trial.mp4',
+        #     # writer=pan.FFMpegWriter(fps=10),
+        #     'ffmpeg', fps=VIDEOFPS
+        # )
 
         plt.show()
 
