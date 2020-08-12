@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as pcm
 import numpy as np
 
-from ..global_imports import *
+from ..global_imports.smmpl_vis import *
 from ...solaris_opcodes.product_calc.nrb_calc import nrb_calc
 from ...solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 

@@ -5,7 +5,7 @@ import datetime as dt
 import pandas as pd
 
 from . import visualiser
-from .global_imports import *
+from .global_imports.smmpl_vis import *
 from .productvis import productvis
 from .. import smmpl_opcodes as smmplop
 from ..smmpl_opcodes import scanpat_calc as spc
@@ -37,7 +37,7 @@ def main(
         endtime,
         UTCINFO,
         None,
-        pd.Timedelta(smmplop.global_imports.SEGDELTA, 'm'),
+        pd.Timedelta(smmplop.global_imports.smmpl_vis.SEGDELTA, 'm'),
         deltatime,
     )
 

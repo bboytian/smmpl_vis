@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from ..global_imports import *
+from ..global_imports.smmpl_vis import *
 
 
 # supp function
