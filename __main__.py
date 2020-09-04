@@ -7,7 +7,9 @@ import pandas as pd
 from . import visualiser
 from .global_imports.smmpl_vis import *
 from .productvis import productvis
-from .. import smmpl_opcodes as smmplop
+from .scanpatvis import scanpatvis
+
+from .smmpl_opcodes.global_imports.params_smmpl_opcodes import SEGDELTA
 from ..smmpl_opcodes import scanpat_calc as spc
 from ..solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 
@@ -37,19 +39,25 @@ def main(
         endtime,
         UTCINFO,
         None,
-        pd.Timedelta(smmplop.global_imports.smmpl_vis.SEGDELTA, 'm'),
+        pd.Timedelta(SEGDELTA, 'm'),
         deltatime,
     )
 
     # vis protocol object
+
     ## product_calc
-    productcalc_vis = productvis('SNR2_tra', to, 'smmpl_E2', smmpl_reader)
+    # productcalc_vis = productvis('SNR2_tra', to, 'smmpl_E2', smmpl_reader)
+
+    ## scanpat_calc
+    scanpatcalc_vis = scanpatvis(to)
+
 
     # begin animation
     vis = visualiser(  # this runs the animation straight away
         to,
         interval,
-        productcalc_vis
+        scanpatcalc_vis,
+        # productcalc_vis
     )
 
 

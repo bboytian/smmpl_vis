@@ -1,4 +1,8 @@
 # imports
+import multiprocessing as mp
+
+import pandas as pd
+
 from .aimlines import aimlines
 from .aimlines_check import aimlines_check
 from .aimpath import aimpath
@@ -7,7 +11,12 @@ from .grid import grid
 from .hemisphere import hemisphere
 
 from ..global_imports.smmpl_vis import *
+from ..smmpl_opcodes.scanpat_calc import main as scanpat_calc
+from ..smmpl_opcodes.scanpat_calc.sunforecaster import sunforecaster
+from ..smmpl_opcodes.global_imports.params_smmpl_opcodes import\
+    LATITUDE, LONGITUDE, ELEVATION
 
+# params
 
 ## plot params
 _hem_alpha = 0.2
@@ -41,6 +50,10 @@ _aimpath_color = 'b'
 ## other plot values
 _cone_height = 20        # [km]
 
+## other params
+_readduration = pd.Timedelta(1, 'd')
+_initreaddatatimes = 1
+_inittimeout = 2                # [s]
 
 
 # main class
@@ -48,40 +61,50 @@ class scanpatvis:
 
     def __init__(
             self,
-            ax, gridind,
             timeobj,
-            sunforecaster,
-            plotshapes_tg,
     ):
-        '''
-        Attributes with 'self' in the front are to be animated
-
-        Future
-            - lidar cone to be directed to move with scan_event
-
-        Parameters
-            ax (plt.Axes): ax we want to plot on
-            gridind (int): determines which grid info to plot on specified 2d ax
-                    (str): 'all', plots all grids info on 3d ax
-            timeobj (scanpat_calc.timeobj)
-            sunforecaster (smmpl_opcodes.scanpat_calc.sunforecaster)
-            plotshapes_tg (smmpl_opcodes.scanpat_calc.targetgenerator.plotshapes)
-        '''
-
-        # object attributes
         self.to = timeobj
-        self.sf = sunforecaster
+        self.starttime = self.to.get_ts()
+        self.endtime = self.starttime + _readduration
+
+        self.sf = sunforecaster(LATITUDE, LONGITUDE, ELEVATION)
+
+        self.data_queue = mp.Queue()
+
+        self.tg = None
+        self.grid_lst_tg = None
+        self.lidar_hem_tg = None
+        self.sun_cone_tg = None
+        self.targ_aimlines_tg = None
+        self.targ_aimpath_tg = None
 
 
+        # init data read
+        self._queue_data(_initreaddatatimes)
+        self._get_data()
 
-        ## scanpat_calc visualisation objects  using plotshapes_tg
-        grid_lst_tg = plotshapes_tg.grid_lst
-        lidar_hem_tg = plotshapes_tg.lidar_hem
-        sun_cone_tg = plotshapes_tg.sun_cone
-        targ_aimlines_tg = plotshapes_tg.targ_aimlines
-        targ_aimpath_tg = plotshapes_tg.targ_aimpath
 
-        if gridind == 'all':
+    def init_vis(self, axl):
+        self.ax3d_l = list(filter(lambda x: '3d' in x.name, axl))
+        self.ax2d_l = list(filter(lambda x: '3d' not in x.name, axl))
+
+        for ax in self.ax3d_l:
+            self._create_plotshapes(ax)
+        for i, ax in enumerate(self.ax2d_l):
+            self._create_plotshapes(ax, i)
+
+    def _create_plotshapes(self, ax, gridind=None):
+        ## static plot objects
+        if gridind:
+            grid_obj = grid(
+                ax,
+                _grid_linewidth, _grid_linealpha,
+                _grid_markersize, _grid_markeralpha,
+                _grid_alpha, 'C{}'.format(_grid_colorstartind+gridind),
+
+                self.grid_lst_tg[gridind]
+            )
+        else:
             grid_lst = [
                 grid(
                     ax,
@@ -90,34 +113,28 @@ class scanpatvis:
                     _grid_alpha, 'C{}'.format(_grid_colorstartind+i),
 
                     grid_tg
-                ) for i, grid_tg in enumerate(grid_lst_tg)
+                ) for i, grid_tg in enumerate(self.grid_lst_tg)
             ]
-        else:
-            grid_obj = grid(
-                ax,
-                _grid_linewidth, _grid_linealpha,
-                _grid_markersize, _grid_markeralpha,
-                _grid_alpha, 'C{}'.format(_grid_colorstartind+gridind),
 
-                grid_lst_tg[gridind]
-            )
 
         lidar_hem = hemisphere(
             ax, gridind,
             _hem_alpha, 'C3',
             _hemints_linewidth,
 
-            lidar_hem_tg
+            self.lidar_hem_tg
         )
+
+        ## changing plot objects
         self.sun_cone = cone(
             ax, gridind,
-            timeobj, sunforecaster,
+            self.to, self.sf,
             _cone_height,
             True,               # swath_boo
             _cone_alpha, 'C1',
             _coneints_linewidth,
 
-            sun_cone_tg
+            self.sun_cone_tg
         )
         self.targ_aimlines = aimlines(
             ax, gridind,
@@ -126,29 +143,29 @@ class scanpatvis:
             _aimlines_alpha, _aimlines_color,
             _grid_colorstartind,
 
-            targ_aimlines_tg
+            self.targ_aimlines_tg
         )
         self.targ_aimpath = aimpath(
             ax, gridind,
             _aimpath_linestyle, _aimpath_linewidth,
             _aimpath_alpha, _aimpath_color,
 
-            targ_aimpath_tg
+            self.targ_aimpath_tg
         )
 
-
         ## other visualisation objects
+
         unit_hem = hemisphere(  # shows the blind range of the lidar
             ax, gridind,
             _hem_alpha, 'C2',
             _hemints_linewidth,
 
             r=0.3,
-            grid_lst=grid_lst_tg
+            grid_lst=self.grid_lst_tg
         )
         self.lidar_cone = cone(
             ax, gridind,
-            timeobj, sunforecaster,
+            self.to, self.sf,
             _cone_height,
             False,              # swath_boo
             1, 'C2',
@@ -156,7 +173,7 @@ class scanpatvis:
 
             thetas=0, phis=0,
             Thetas=0.005,
-            grid_lst=grid_lst_tg,
+            grid_lst=self.grid_lst_tg,
         )
         if SHOWCHECKBOO:
             self.sp_aimlinescheck = aimlines_check(
@@ -166,35 +183,46 @@ class scanpatvis:
                 _aimlinescheck_alpha, _aimlinescheck_color,
 
                 self.to.get_ts(),
-                targ_aimlines_tg
+                self.targ_aimlines_tg
             )
 
+    def _queue_data(self, n):
+        for i in range(n):
+            # scanpat_calc puts in a targetgenerator object for each time segment
+            scanpat_calc(
+                queue=self.data_queue,
+                starttime=self.starttime, endtime=self.endtime,
+                verbboo=False
+            )
+            # iterating the next time range to consider
+            self.starttime += _readduration
+            self.endtime += _readduration
+
+    def _get_data(self):
+        # grabbing new data from queue
+        self.tg = self.data_queue.get()
+
+        ## starting data queue if the data stock is low
+        if self.data_queue.qsize() < _initreaddatatimes:
+            self._queue_data(_initreaddatatimes)
+
+        # retrieving
+        self.grid_lst_tg = self.tg.ps.grid_lst
+        self.lidar_hem_tg = self.tg.ps.lidar_hem
+        self.sun_cone_tg = self.tg.ps.sun_cone
+        self.targ_aimlines_tg = self.tg.ps.targ_aimlines
+        self.targ_aimpath_tg = self.tg.ps.targ_aimpath
 
 
     # update methods
 
     def update_ts(self):
-        '''
-        for the sake of animation
-        '''
         self.sun_cone.update_ts(*self.sf.get_angles(self.to.get_ts()))
 
-    def update_toseg(
-            self,
-            sun_cone_tg,
-            targ_aimlines_tg,
-            targ_aimpath_tg,
-    ):
-        '''
-        updates sunswath, aimlines and aimpath
-
-        Parameters
-          sun_cone_tg (scanpat_calc.targetgenerator.plotshapes.sun_cone)
-          targ_aimline_tg (scanpat_calc.targetgenerator.plotshapes.targ_aimline)
-          targ_aimpath_tg (scanpat_calc.targetgenerator.plotshapes.targ_aimpath)
-        '''
-        self.sun_cone.update_toseg(sun_cone_tg)
-        self.targ_aimlines.update_toseg(targ_aimlines_tg)
-        self.targ_aimpath.update_toseg(targ_aimpath_tg)
+    def update_toseg(self,):
+        self.sun_cone.update_toseg(self.sun_cone_tg)
+        self.targ_aimlines.update_toseg(self.targ_aimlines_tg)
+        self.targ_aimpath.update_toseg(self.targ_aimpath_tg)
         if SHOWCHECKBOO:
-            self.sp_aimlinescheck.update_toseg(self.to.get_ts(), targ_aimlines_tg)
+            self.sp_aimlinescheck.update_toseg(self.to.get_ts(),
+                                               self.targ_aimlines_tg)

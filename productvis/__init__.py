@@ -7,15 +7,14 @@ import matplotlib.cm as pcm
 import numpy as np
 
 from ..global_imports.smmpl_vis import *
-from ...solaris_opcodes.product_calc.nrb_calc import nrb_calc
-from ...solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
+from ..solaris_opcodes.product_calc.nrb_calc import nrb_calc
+from ..solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 
 
 # params
 _dataf = nrb_calc
 _readduration = pd.Timedelta(1, 'h')
 _initreaddatatimes = 1
-_inittimeout = 2                # [s]
 
 _colormap = 'Blues'
 _nrbmaxthres = np.log(500 + 1)
