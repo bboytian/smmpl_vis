@@ -60,21 +60,21 @@ class visualiser:
 
         ### grid projection visualisation plot
         axs2d = []
-        # lengrid_lst_tg = len(self.ps_tg.grid_lst)
-        # ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
-        # fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
-        # try:                    # handles the event where we only have one grid
-        #     axs2d = axs2d.flatten()
-        # except AttributeError:
-        #     axs2d = [axs2d]
-        # for i in range(lengrid_lst_tg):
-        #     ax = axs2d[i]
-        #     ax.set_xlabel('South -- North')
-        #     ax.set_ylabel('East -- West')
-        #     axlim = self.ps_tg.grid_lst[i].l/2 * 1.2
-        #     ax.set_xlim([-axlim, axlim])
-        #     ax.set_ylim([-axlim, axlim])
-        #     ax.margins(0)
+        lengrid_lst_tg = len(self.ps_tg.grid_lst)
+        ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
+        fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
+        try:                    # handles the event where we only have one grid
+            axs2d = axs2d.flatten()
+        except AttributeError:
+            axs2d = [axs2d]
+        for i in range(lengrid_lst_tg):
+            ax = axs2d[i]
+            ax.set_xlabel('South -- North')
+            ax.set_ylabel('East -- West')
+            axlim = self.ps_tg.grid_lst[i].l/2 * 1.2
+            ax.set_xlim([-axlim, axlim])
+            ax.set_ylim([-axlim, axlim])
+            ax.margins(0)
 
         self.ax3d_l = [ax3d]
         self.fig3d_l = [fig3d]
@@ -88,17 +88,29 @@ class visualiser:
             visobject.init_vis([ax3d, *axs2d])
 
 
-        # show
+        # animate
         self.animation3d = pan.FuncAnimation(
             fig3d, self.update,
             interval=self.interval,
             frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
-        # self.animation3d.save(
-        #     '/home/tianli/Desktop/trial.mp4',
-        #     # writer=pan.FFMpegWriter(fps=10),
-        #     'ffmpeg', fps=VIDEOFPS
-        # )
+        self.animation2d = pan.FuncAnimation(
+            fig2d, self.update,
+            interval=self.interval,
+            frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
+        )
+
+        # save
+        if SAVEANIMATION3D:
+            self.animation3d.save(
+                DIRCONFN(SAVEDIR, SAVEFILE.format('fig3d')),
+                'ffmpeg', fps=VIDEOFPS
+            )
+        if SAVEANIMATION2D:
+            self.animation2d.save(
+                DIRCONFN(SAVEDIR, SAVEFILE.format('fig2d')),
+                'ffmpeg', fps=VIDEOFPS
+            )
 
         plt.show()
 
@@ -138,11 +150,11 @@ class visualiser:
     def update_ts(self):
 
         for ax3d in self.ax3d_l:
-
-            self.viewazimuth += VIEWROTDISCRETE
-            if self.viewazimuth > 360:
-                self.viewazimuth -= 360
-            ax3d.view_init(VIEWELEVATION, self.viewazimuth)
+            if ROTATE3DFIG:
+                self.viewazimuth += VIEWROTDISCRETE
+                if self.viewazimuth > 360:
+                    self.viewazimuth -= 360
+                ax3d.view_init(VIEWELEVATION, self.viewazimuth)
 
         for visobject in self.visobjects:
             visobject.update_ts()
