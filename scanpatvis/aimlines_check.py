@@ -26,7 +26,7 @@ class aimlines_check:
             alpha, color,
 
             timestamp,
-            aimlines_tg
+            aimlines_ps
     ):
         '''
         Plots the calculated scan patterns on both 2D and 3D axes
@@ -43,7 +43,7 @@ class aimlines_check:
 
             timestamp (datetime like): timestamp which would be used to search for
                                        scan pattern
-            aimlines_tg (scanpat_calc.targetgenerator.aimlines)
+            aimlines_ps (scanpat_calc.targetgenerator.aimlines)
 
         Methods
             plot_toseg: plot targets for each grid for every timeobjseg
@@ -68,7 +68,7 @@ class aimlines_check:
         self.aimlines_pltlst = None
 
         ## obj attrs
-        self.grid_lst = aimlines_tg.grid_lst
+        self.grid_lst = aimlines_ps.grid_lst
 
         ## data attrs
         self.dir_a = None
@@ -161,9 +161,9 @@ class aimlines_check:
 
 
     # update meth
-    def update_toseg(self, aimlines_tg):
+    def update_toseg(self, aimlines_ps):
         # updating relevant target generator objects
-        self.aimlines = aimlines_tg
+        self.aimlines = aimlines_ps
 
         # removing plot
         for aimlines_plt in self.aimlines_pltlst:

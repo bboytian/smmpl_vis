@@ -44,6 +44,13 @@ class visualiser:
 
         self.viewazimuth = VIEWAZIMUTHSTART
 
+        for visobject in visobjects:
+            try:
+                self.ps = visobject.ps
+                break
+            except AttributeError:
+                pass
+
 
         # init
 
@@ -60,7 +67,7 @@ class visualiser:
 
         ### grid projection visualisation plot
         axs2d = []
-        lengrid_lst_tg = len(self.ps_tg.grid_lst)
+        lengrid_lst_tg = len(self.ps.grid_lst)
         ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
         fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
         try:                    # handles the event where we only have one grid
@@ -71,7 +78,7 @@ class visualiser:
             ax = axs2d[i]
             ax.set_xlabel('South -- North')
             ax.set_ylabel('East -- West')
-            axlim = self.ps_tg.grid_lst[i].l/2 * 1.2
+            axlim = self.ps.grid_lst[i].l/2 * 1.2
             ax.set_xlim([-axlim, axlim])
             ax.set_ylim([-axlim, axlim])
             ax.margins(0)

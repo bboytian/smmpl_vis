@@ -28,29 +28,29 @@ class cone:
             alpha, color,
             ints_linewidth,
 
-            cone_tg=None,
+            cone_ps=None,
             thetas=0, phis=0,
             Thetas=_thetas,
             grid_lst=[]
     ):
         '''
-        has the option to plot a static cone if cont_tg is not specified,
+        has the option to plot a static cone if cont_ps is not specified,
         the cone should not programmed to animate in plotshape.__init__
 
         Parameters
             ax (matplotlib.pyplot.axes)
             gridind (int): determines which grid info to plot on specified 2d ax
                     (str): 'all', plots all grids info on 3d ax
-                           can be None if not cone_tg
-            timeobj (scanpat_calc.timeobj): can be None if not cone_tg
-            sunforecaster (scanpat_calc.sunforecaster): can be None if not cone_tg
+                           can be None if not cone_ps
+            timeobj (scanpat_calc.timeobj): can be None if not cone_ps
+            sunforecaster (scanpat_calc.sunforecaster): can be None if not cone_ps
             swath_boo (boolean): whether to plot swath, simple cone otherwise
             alpha (float): alpha of cone and swath
             color (str): color of cone and swath
             ints_linewidth (float): linewidth of line of intersect surface
 
-            cone_tg (scanpat_calc.targetgenerator.cone)
-            thetas, phis (float): direction of cone, specified if cone_tg==None
+            cone_ps (scanpat_calc.targetgenerator.cone)
+            thetas, phis (float): direction of cone, specified if cone_ps==None
             r (float): [km] height of cone
             grid_lst (list): specified if we want intersection to be plotted
 
@@ -85,16 +85,16 @@ class cone:
         ## object attribtues
         self.to, self.sf = timeobj, sunforecaster
         self.r = r
-        if cone_tg:
+        if cone_ps:
             # static
             if self.allgrid_boo:
-                self.grid_lst = cone_tg.grid_lst
+                self.grid_lst = cone_ps.grid_lst
             else:
-                self.grid_lst = [cone_tg.grid_lst[gridind]]
-            self.Thetas = cone_tg.Thetas
+                self.grid_lst = [cone_ps.grid_lst[gridind]]
+            self.Thetas = cone_ps.Thetas
             # changing
             self.thetas, self.phis = self.sf.get_angles(self.to.get_ts())
-            self.cone = cone_tg
+            self.cone = cone_ps
             self.swath_pathlst = None
         else:         # static cone, not animated
             self.thetas, self.phis = thetas, phis
@@ -244,9 +244,9 @@ class cone:
         self.plot_ts()
 
 
-    def update_toseg(self, cone_tg):
+    def update_toseg(self, cone_ps):
         # updating relevant targetgenerator object
-        self.cone = cone_tg
+        self.cone = cone_ps
 
         # removing plot
         for swathints_plt in self.swathints_pltlst:

@@ -11,7 +11,7 @@ class grid:
             linewidth, linealpha,
             markersize, markeralpha,
             alpha, color,
-            grid_tg,
+            grid_ps,
     ):
         '''
         Parameters
@@ -23,7 +23,7 @@ class grid:
             alpha (float): alpha of plane
             color (str): color of all plots
 
-            grid_tg (scanpat_calc.targetgenerator.grid)
+            grid_ps (scanpat_calc.targetgenerator.grid)
         Methods
             plot: plot grid for '3d' and '2d'
         '''
@@ -43,12 +43,12 @@ class grid:
         self.scat_plt = None
 
         ## targetgenerator objects
-        self.xp_mat, self.yp_mat = grid_tg.xp_mat, grid_tg.yp_mat
-        self.xg_mat, self.yg_mat = grid_tg.xg_mat, grid_tg.yg_mat
-        self.zg_mat = grid_tg.zg_mat
-        self.x_ara, self.y_ara = grid_tg.x_ara, grid_tg.y_ara
-        self.z_ara = grid_tg.z_ara
-        self.h = grid_tg.h
+        self.xp_mat, self.yp_mat = grid_ps.xp_mat, grid_ps.yp_mat
+        self.xg_mat, self.yg_mat = grid_ps.xg_mat, grid_ps.yg_mat
+        self.zg_mat = grid_ps.zg_mat
+        self.x_ara, self.y_ara = grid_ps.x_ara, grid_ps.y_ara
+        self.z_ara = grid_ps.z_ara
+        self.h = grid_ps.h
 
         # plotting
         self.plot()

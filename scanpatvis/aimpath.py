@@ -9,7 +9,7 @@ class aimpath:
             self,
             ax, gridind,
             linestyle, linewidth, alpha, color,
-            aimpath_tg
+            aimpath_ps
     ):
 
         '''
@@ -25,7 +25,7 @@ class aimpath:
             alpha (float): alpha of aimline
             color (str): color of aimline
 
-            aimpath_tg (scanpat_calc.targetgenerator.aimpath)
+            aimpath_ps (scanpat_calc.targetgenerator.aimpath)
 
         Methods
             plot_toseg: plot path for each grid for every timeobjseg
@@ -50,9 +50,9 @@ class aimpath:
 
         ## object attrs
         ### static
-        self.grid_lst = aimpath_tg.grid_lst
+        self.grid_lst = aimpath_ps.grid_lst
         ### changing
-        self.aimpath = aimpath_tg
+        self.aimpath = aimpath_ps
         self.path_ara = None
 
 
@@ -100,9 +100,9 @@ class aimpath:
 
 
     # update meth
-    def update_toseg(self, aimpath_tg):
+    def update_toseg(self, aimpath_ps):
         # update relevant target generator objects
-        self.aimpath = aimpath_tg
+        self.aimpath = aimpath_ps
 
         # removing plot
         for aimpath_plt in self.aimpath_pltlst:

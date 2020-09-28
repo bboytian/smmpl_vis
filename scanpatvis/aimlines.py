@@ -13,7 +13,7 @@ class aimlines:
             alpha, color,
             grid_colorstartind,
 
-            aimlines_tg
+            aimlines_ps
     ):
         '''
         Parameters
@@ -28,7 +28,7 @@ class aimlines:
             grid_colorstartind (int): color from which grid iterates,
                                       for plotting points
 
-            aimlines_tg (scanpat_calc.targetgenerator.aimlines)
+            aimlines_ps (scanpat_calc.targetgenerator.aimlines)
 
         Methods
             plot_toseg: plot targets for each grid for every timeobjseg
@@ -55,9 +55,9 @@ class aimlines:
 
         ## object attrs
         ### static
-        self.grid_lst = aimlines_tg.grid_lst
+        self.grid_lst = aimlines_ps.grid_lst
         ### changing
-        self.aimlines = aimlines_tg
+        self.aimlines = aimlines_ps
         self.coord_matlst = None
         self.mask_matlst = None
         self.dir_matlst = None
@@ -124,9 +124,9 @@ class aimlines:
 
 
     # update meth
-    def update_toseg(self, aimlines_tg):
+    def update_toseg(self, aimlines_ps):
         # updating relevant target generator objects
-        self.aimlines = aimlines_tg
+        self.aimlines = aimlines_ps
 
         # removing plot
         for aimlines_plt in self.aimlines_pltlst:

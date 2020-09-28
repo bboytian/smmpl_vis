@@ -17,16 +17,16 @@ class hemisphere:
             alpha, color,
             ints_linewidth,
 
-            hemisphere_tg=None,
+            hemisphere_ps=None,
             r=1,
             grid_lst=[]
     ):
         '''
         has the option to plot a hemisphere without generating any masks if
-        hemisphere_tg is not specified
+        hemisphere_ps is not specified
 
         Parameters
-            hemisphere_tg (targetgenerator.hemisphere)
+            hemisphere_ps (targetgenerator.hemisphere)
             ax (matplotlib.pyplot.axes): axis onwhich we are plotting
             gridind (int): determines which grid info to plot on specified 2d ax
                     (str): 'all', plots all grids info on 3d ax
@@ -35,7 +35,7 @@ class hemisphere:
             ints_linewidth (float): line of intersect between hem and plane
 
 
-            hemisphere_tg (scanpat_calc.targetgenerator.hemisphere)
+            hemisphere_ps (scanpat_calc.targetgenerator.hemisphere)
             r (float): radius of hemisphere for display purposes
             grid_lst (list): specified if we want intersection to be plotted
 
@@ -57,12 +57,12 @@ class hemisphere:
         self.ints_pltlst = None
 
         ## targetgenerator object
-        if hemisphere_tg:
-            self.r = hemisphere_tg.r  # assuming grids are static
+        if hemisphere_ps:
+            self.r = hemisphere_ps.r  # assuming grids are static
             if gridind == 'all':
-                self.grid_lst = hemisphere_tg.grid_lst
+                self.grid_lst = hemisphere_ps.grid_lst
             else:
-                self.grid_lst = [hemisphere_tg.grid_lst[gridind]]
+                self.grid_lst = [hemisphere_ps.grid_lst[gridind]]
         else:
             self.r = r
             if gridind == 'all':
