@@ -1,5 +1,6 @@
 # imports
 import matplotlib.pyplot as plt
+import matplotlib.colors as pcolors
 import numpy as np
 
 from .plot_resampler import main as plot_resampler
@@ -67,21 +68,26 @@ def main(
                 procnum=MPLNETPROCNUM
             )
 
+        zresamplework_tra = np.nan_to_num(resamplework_tra)
+        vmax = zresamplework_tra.max(axis=-1)
+        resamplework_tra = resamplework_tra/(vmax[:, None])
+        resamplework_tra[resamplework_tra < 0] = 0
+
         # plotting
         axs[i].pcolormesh(
-            # *np.meshgrid(np.arange(len(ts_ta)), resamplez_tra[0]),
             *np.meshgrid(ts_ta, resamplez_tra[0]),
             resamplework_tra.T,
-            # norm='NEED TO WORK ON THIS'
+            norm=pcolors.PowerNorm(0.5)
         )
 
 
     # plotting product masks
     if product_d:
-        pass
 
+        # resampling product location
 
-    # other plot configs
+        # axs[-1].
+
 
     # showing plot
     plt.show()
@@ -117,6 +123,8 @@ if __name__ == '__main__':
     SNR_tra = ret_d['SNR_tra']
     setz_a = ret_d['DeltNbinpadtheta_a']
     setzind_ta = ret_d['DeltNbinpadthetaind_ta']
+
+
 
     main(
         [
