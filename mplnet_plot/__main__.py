@@ -4,22 +4,23 @@ import matplotlib.colors as pcolors
 import numpy as np
 
 from .workarray_resampler import main as workarray_resampler
+from .product_resampler import main as product_resampler
 from ..solaris_opcodes.product_calc.nrb_calc import chunk_operate
 from ..global_imports.smmpl_vis import *
 
 # params
 _marker_l = [                   # number of markers follow number of layers for
     "s",                        # single product
+    "X",
+    "*",
     "p",
     "P",
-    "*",
     "h",
     "H",
     "v",
     "^",
     "<",
     ">",
-    "X",
     "D",
     "d",
 ]
@@ -27,10 +28,12 @@ _color_l = [                    # number of colors follow number of product type
     'r',                        # should contrast sharply with 'viridis' color map
     'g',
 ]
+_powernormconst = 0.5
+
 
 # main func
 def main(
-        work_ltra, productmask_lta,
+        work_ltra, productmask_ltl2a,
         z_tra, r_trm, setz_a, setzind_ta,
         ts_ta,
 ):
@@ -41,6 +44,10 @@ def main(
     This function will resample the work arrays such that all the altitudes fit on a
     single grid, making z_tra redundent; i.e. only the first time index is needed for
     the resampled z_tra
+
+    Future
+        - not able to change the color of the mask plot to the same color as the
+          marker
 
     Parameters
         work_ltra (list): list of work_tra (np.ndarray) with time and range axis
@@ -95,18 +102,43 @@ def main(
         axs[i].pcolormesh(
             *np.meshgrid(ts_ta, resamplez_tra[0]),
             resamplework_tra.T,
-            norm=pcolors.PowerNorm(0.5)
+            norm=pcolors.PowerNorm(_powernormconst)
         )
 
 
     # plotting product masks
-    for productmask_ta in productmask_lta:
-
+    # iterate product types
+    for i, productmask_tl2a in enumerate(productmask_ltl2a):
         # resampling product location
+        resampleprodmask_tl2a, resampleprodmask_trm = product_resampler(
+            productmask_tl2a, resamplez_tra
+        )
 
         # plotting on other work arrays axis
+        for k in range(len(axs)-1):
+            for j in range(resampleprodmask_tl2a.shape[1]):
+
+                # iterating plot properties
+                marker = _marker_l[j]
+                color = _color_l[i]
+
+                # plotting
+                resampleprodbot_tla = resampleprodmask_tl2a[:, j, 0]
+                resampleprodtop_tla = resampleprodmask_tl2a[:, j, 1]
+                axs[k].plot(
+                    ts_ta, resampleprodbot_tla,
+                    ts_ta, resampleprodtop_tla,
+                    marker=marker, linestyle='',
+                    color=color
+                )
 
         # plotting on mask axis
+        plotmask_trm = resampleprodmask_trm.astype(np.float)
+        plotmask_trm[resampleprodmask_trm] = np.nan
+        axs[-1].pcolormesh(
+            *np.meshgrid(ts_ta, resamplez_tra[0]),
+            plotmask_trm.T,
+        )
 
 
     # showing plot
@@ -134,7 +166,7 @@ if __name__ == '__main__':
     # computing products
     product_d = product_calc(
         lidarname, mplreader,
-        starttime=LOCTIMEFN('202009220000', UTCINFO),
+        starttime=LOCTIMEFN('202009220800', UTCINFO),
         endtime=LOCTIMEFN('202009230000', UTCINFO),
         timestep=None, rangestep=None,
         angularoffset=angularoffset,
@@ -142,7 +174,7 @@ if __name__ == '__main__':
         combpolboo=True,
 
         pixelsize=pixelsize, gridlen=gridlen,
-        latitude=latitude, longitude=logitude,
+        latitude=latitude, longitude=longitude,
         elevation=elevation,
     )
 
@@ -168,14 +200,14 @@ if __name__ == '__main__':
 
     ## product masks
     cloud_d = product_d['cloud']
-    cloudmask_ta = product_d['']
-    productmask_lta = [
-        cloudmask_ta
+    cloudmask_tl2a = cloud_d['cloud_mask']
+    productmask_ltl2a = [
+        cloudmask_tl2a
     ]
 
     # plotting
     main(
-        work_ltra, productmask_lta,
+        work_ltra, productmask_ltl2a,
         z_tra, r_trm, setz_a, setzind_ta,
         ts_ta,
     )
