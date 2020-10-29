@@ -166,8 +166,8 @@ if __name__ == '__main__':
     # computing products
     product_d = product_calc(
         lidarname, mplreader,
-        starttime=LOCTIMEFN('202009220800', UTCINFO),
-        endtime=LOCTIMEFN('202009230000', UTCINFO),
+        starttime=LOCTIMEFN('202010290000', 0),
+        endtime=LOCTIMEFN('202010290600', 0),
         timestep=None, rangestep=None,
         angularoffset=angularoffset,
 
