@@ -119,7 +119,8 @@ def main(
             for j in range(resampleprodmask_tl2a.shape[1]):
 
                 # iterating plot properties
-                marker = _marker_l[j]
+                lind = j%len(_marker_l)
+                marker = _marker_l[lind]
                 color = _color_l[i]
 
                 # plotting
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     product_d = product_calc(
         lidarname, mplreader,
         starttime=LOCTIMEFN('202010290000', 0),
-        endtime=LOCTIMEFN('202010290600', 0),
+        endtime=LOCTIMEFN('202010291200', 0),
         timestep=None, rangestep=None,
         angularoffset=angularoffset,
 
@@ -195,7 +196,7 @@ if __name__ == '__main__':
     setz_a = nrb_d['DeltNbinpadtheta_a']
     setzind_ta = nrb_d['DeltNbinpadthetaind_ta']
     work_ltra = [
-        NRB_tra, SNR_tra
+        NRB_tra
     ]
 
     ## product masks
