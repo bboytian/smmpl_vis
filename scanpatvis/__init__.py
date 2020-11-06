@@ -1,5 +1,8 @@
 # imports
 import multiprocessing as mp
+import os
+import os.path as osp
+import pickle
 
 import pandas as pd
 
@@ -52,7 +55,7 @@ _cone_height = 20        # [km]
 
 ## other params
 _readduration = pd.Timedelta(1, 'd')
-_initreaddatatimes = 1
+_initreaddatatimes = 5
 _inittimeout = 2                # [s]
 
 
@@ -69,7 +72,13 @@ class scanpatvis:
 
         self.sf = sunforecaster(LATITUDE, LONGITUDE, ELEVATION)
 
-        self.data_queue = mp.Queue()
+        self.iter_count = 0
+        self.data_queue = mp.Queue()  # contains the filenames to be serialised
+        self.serial_dir = DIRCONFN(
+            osp.dirname(osp.dirname(osp.abspath(__file__))),
+            TEMPSERIALDIR,
+            SCANPATVISSERIAL
+        )
 
         self.ps = None
         self.grid_lst_ps = None
@@ -85,6 +94,7 @@ class scanpatvis:
 
 
         # init data read
+        print('initialising scanpatvis data')
         self._queue_data(_initreaddatatimes)
         self._get_data()
 
@@ -193,24 +203,43 @@ class scanpatvis:
 
     def _queue_data(self, n):
         for i in range(n):
-            # scanpat_calc puts in a targetgenerator object for each time segment
-            scanpat_calc(
+            # serialising data and writing to file
+            ps = scanpat_calc(
                 write_boo=False,
-                queue=self.data_queue,
+                rettg_boo=True,
                 starttime=self.starttime, endtime=self.endtime,
                 verbboo=False
             )
+            serial_dir = self.serial_dir.format(self.iter_count)
+            with open(serial_dir, 'wb') as f:
+                print(f'writing scanpatvis serial data to {serial_dir}')
+                pickle.dump(ps, f)
+            # message passing
+            self.iter_count += 1
+            self.data_queue.put(serial_dir)
             # iterating the next time range to consider
             self.starttime += _readduration
             self.endtime += _readduration
 
     def _get_data(self):
+        '''
+        Assumes that there is always serialised data in the queue, i.e. the
+        serialisation process is faster than the animation and reading process
+        '''
         # grabbing new data from queue
-        self.ps = self.data_queue.get()
+        serial_dir = self.data_queue.get()
+        with open(serial_dir, 'rb') as f:
+            _, self.ps = pickle.load(f)
+        os.remove(serial_dir)   # deleting temp file
 
-        ## starting data queue if the data stock is low
+        # starting data queue if the data stock is low
         if self.data_queue.qsize() < _initreaddatatimes:
-            self._queue_data(_initreaddatatimes)
+            # starting multiprocess
+            print('starting scanpatvis background data retrieval')
+            mp.Process(
+                target=self._queue_data,
+                args=(_initreaddatatimes, )
+            ).start()
 
         # retrieving
         self.grid_lst_ps = self.ps.grid_lst
@@ -227,6 +256,10 @@ class scanpatvis:
             sun_cone.update_ts(*self.sf.get_angles(self.to.get_ts()))
 
     def update_toseg(self,):
+        # retreive data
+        self._get_data()
+
+        # update objects
         for sun_cone in self.suncone_l:
             self.sun_cone.update_toseg(self.sun_cone_ps)
         for targ_aimlines in self.targaimlines_l:

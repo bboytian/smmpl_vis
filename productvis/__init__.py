@@ -1,5 +1,8 @@
 # imports
 import multiprocessing as mp
+import os
+import os.path as osp
+import pickle
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,7 +10,7 @@ import matplotlib.cm as pcm
 import numpy as np
 
 from ..global_imports.smmpl_vis import *
-from ..solaris_opcodes.product_calc.nrb_calc import nrb_calc
+from ..solaris_opcodes.product_calc.nrb_calc import main as nrb_calc
 from ..solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 
 
@@ -38,10 +41,15 @@ class productvis():
         self.endtime = self.starttime + _readduration
 
         self.data_queue = mp.Queue()
-        self.queuedata_proc = None  # ensures we are only running one at one time
         self.data_d = None
         self.dataplotts = None
         self.dataplotind = None
+        self.iter_count = 0
+        self.serial_dir = DIRCONFN(
+            osp.dirname(osp.dirname(osp.abspath(__file__))),
+            TEMPSERIALDIR,
+            PRODUCTVISSERIAL,
+        )
 
         self.ts_ta = None
         self.x_tra = None
@@ -65,6 +73,7 @@ class productvis():
                                 # (phi, theta) [rad]
 
         # initial data read
+        print('initialising productvis data')
         self._queue_data(_initreaddatatimes)
         self._get_data()
 
@@ -74,13 +83,19 @@ class productvis():
 
     def _queue_data(self, n):
         for i in range(n):
+            # serialising data and writing to file
             data_d = _dataf(
                 self.lidarname, smmpl_reader,
                 starttime=self.starttime, endtime=self.endtime,
                 verbboo=False
             )
-            if data_d:
-                self.data_queue.put(data_d)
+            serial_dir = self.serial_dir.format(self.iter_count)
+            with open(serial_dir, 'wb') as f:
+                print(f'writing productvis serial data to {serial_dir}')
+                pickle.dump(data_d, f)
+            # message passing
+            self.iter_count += 1
+            self.data_queue.put(serial_dir)
             # iterating the next time range to consider
             self.starttime += _readduration
             self.endtime += _readduration
@@ -92,19 +107,20 @@ class productvis():
         will throw an error if nothing is in the queue
         '''
         # grabbing new data from queue
-        self.data_d = self.data_queue.get()
+        serial_dir = self.data_queue.get()
+        with open(serial_dir, 'rb') as f:
+            self.data_d = pickle.load(f)
+        os.remove(serial_dir)   # deleting temp file
 
-        ## starting data queue if the data stock is low
+        # starting data queue if the data stock is low
         if self.data_queue.qsize() < _initreaddatatimes:
             self._queue_data(_initreaddatatimes)
-            # try:                # runnning one data queue at each time
-            #     print('trying to queue')
-            #     raise AttributeError
-            #     # self.queuedata_proc.join()
-            # except AttributeError:  # first process to be called
-            #     self.queuedata_proc = mp.Process(target=self._queue_data,
-            #                                      args=(_initreaddatatimes,))
-            #     self.queuedata_proc.start()
+            # starting multiprocess
+            print('starting productvis background data retrieval')
+            mp.Process(
+                target=self._queue_data,
+                args=(_initreaddatatimes, )
+            ).start()
 
         # storing new values
         self.ts_ta = self.data_d['Timestamp']

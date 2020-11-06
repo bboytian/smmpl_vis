@@ -39,14 +39,16 @@ class visualiser:
         self.interval = interval
         self.visobjects = visobjects
 
-        self.realtime_boo = self.to.get_realtimeboo()
+        self.realtime_boo = REALTIMEBOO
         self.utcinfo = self.to.get_utcinfo()
 
         self.viewazimuth = VIEWAZIMUTHSTART
 
+        self.plot2d = False
         for visobject in visobjects:
             try:
                 self.ps = visobject.ps
+                self.plot2d = True
                 break
             except AttributeError:
                 pass
@@ -67,21 +69,22 @@ class visualiser:
 
         ### grid projection visualisation plot
         axs2d = []
-        lengrid_lst_tg = len(self.ps.grid_lst)
-        ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
-        fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
-        try:                    # handles the event where we only have one grid
-            axs2d = axs2d.flatten()
-        except AttributeError:
-            axs2d = [axs2d]
-        for i in range(lengrid_lst_tg):
-            ax = axs2d[i]
-            ax.set_xlabel('South -- North')
-            ax.set_ylabel('East -- West')
-            axlim = self.ps.grid_lst[i].l/2 * 1.2
-            ax.set_xlim([-axlim, axlim])
-            ax.set_ylim([-axlim, axlim])
-            ax.margins(0)
+        if self.plot2d:
+            lengrid_lst_tg = len(self.ps.grid_lst)
+            ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
+            fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
+            try:                    # handles the event where we only have one grid
+                axs2d = axs2d.flatten()
+            except AttributeError:
+                axs2d = [axs2d]
+            for i in range(lengrid_lst_tg):
+                ax = axs2d[i]
+                ax.set_xlabel('South -- North')
+                ax.set_ylabel('East -- West')
+                axlim = self.ps.grid_lst[i].l/2 * 1.2
+                ax.set_xlim([-axlim, axlim])
+                ax.set_ylim([-axlim, axlim])
+                ax.margins(0)
 
         self.ax3d_l = [ax3d]
         self.fig3d_l = [fig3d]
@@ -101,11 +104,12 @@ class visualiser:
             interval=self.interval,
             frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
-        self.animation2d = pan.FuncAnimation(
-            fig2d, self.update,
-            interval=self.interval,
-            frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
-        )
+        if self.plot2d:
+            self.animation2d = pan.FuncAnimation(
+                fig2d, self.update,
+                interval=self.interval,
+                frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
+            )
 
         # save
         if SAVEANIMATION3D:
@@ -113,11 +117,12 @@ class visualiser:
                 DIRCONFN(SAVEDIR, SAVEFILE.format('fig3d')),
                 'ffmpeg', fps=VIDEOFPS
             )
-        if SAVEANIMATION2D:
-            self.animation2d.save(
-                DIRCONFN(SAVEDIR, SAVEFILE.format('fig2d')),
-                'ffmpeg', fps=VIDEOFPS
-            )
+        if self.plot2d:
+            if SAVEANIMATION2D:
+                self.animation2d.save(
+                    DIRCONFN(SAVEDIR, SAVEFILE.format('fig2d')),
+                    'ffmpeg', fps=VIDEOFPS
+                )
 
         plt.show()
 
