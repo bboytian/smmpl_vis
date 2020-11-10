@@ -1,7 +1,8 @@
 # imports
-import multiprocessing as mp  # on unix this uses 'fork' program
-
 import datetime as dt
+import multiprocessing as mp  # on unix this uses 'fork' program
+import os
+
 import pandas as pd
 
 from . import visualiser
@@ -33,6 +34,11 @@ def main(
         deltatime=_deltatime,
         interval=_interval,
 ):
+    # clearing all temporary serial files
+    for f in FINDFILESFN(SCANPATVISSERIAL, TEMPSERIALDIR) \
+        + FINDFILESFN(PRODUCTVISSERIAL, TEMPSERIALDIR):
+        os.remove(f)
+
     # vis objects under main thread
     to = spc.timeobj(
         starttime,
@@ -46,17 +52,29 @@ def main(
     # vis protocol object
 
     ## product_calc
-    productcalc_vis = productvis('SNR2_tra', to, 'smmpl_E2', smmpl_reader)
+    productcalc_vis = productvis(
+        to,
+
+        'smmpl_E2', smmpl_reader,
+        angularoffset=ANGOFFSET,
+
+        datakey_l=[
+            'SNR2_tra'
+        ],
+        productkey_d={
+            # 'cloud': 'cloud_mask'
+        }
+    )
 
     ## scanpat_calc
-    # scanpatcalc_vis = scanpatvis(to)
+    scanpatcalc_vis = scanpatvis(to)
 
 
     # begin animation
     vis = visualiser(  # this runs the animation straight away
         to,
         interval,
-        # scanpatcalc_vis,
+        scanpatcalc_vis,
         productcalc_vis
     )
 

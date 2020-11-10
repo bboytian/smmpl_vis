@@ -4,46 +4,61 @@ import os
 import os.path as osp
 import pickle
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.cm as pcm
 import numpy as np
+import pandas as pd
 
+from .arrayvis import arrayvis
+from .productmaskvis import productmaskvis
 from ..global_imports.smmpl_vis import *
-from ..solaris_opcodes.product_calc.nrb_calc import main as nrb_calc
-from ..solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
+from ..solaris_opcodes.product_calc import main as product_calc
 
 
 # params
-_dataf = nrb_calc
-_readduration = pd.Timedelta(1, 'h')
+_arraycmap_l = [
+    'Blues'
+]
+_productmaskcmap_l = [
+    None
+]
+
+_readduration = pd.Timedelta(30, 'm')
 _initreaddatatimes = 1
 
-_colormap = 'Blues'
-_nrbmaxthres = np.log(500 + 1)
-# _nrbmaxthres = 20
-_alphascale = 0.5
-_scatterpointsize = 150
+_productarraykey = 'nrb'
+_arraytimestampkey = 'Timestamp'
 
 # class
 class productvis():
 
     def __init__(
             self,
-            datakey, timeobj,
-            lidarname, mplreader
-    ):
-        self.datakey = datakey
-        self.to = timeobj
-        self.lidarname = lidarname
+            timeobj,
 
+            lidarname, mplreader,
+            angularoffset=0,
+
+            datakey_l=[],
+            productkey_d={},
+    ):
+        '''
+        This object will control the following sub objects.
+        1. arrayvis: plot out the computed data arrays
+        2. productmaskvis: plots out the mask for the computed products
+
+        It will also be incharge of grabbing data and passing it onto the other objects
+        '''
+        self.to = timeobj
         self.starttime = self.to.get_ts()
         self.endtime = self.starttime + _readduration
 
+        self.lidarname = lidarname
+        self.mplreader = mplreader
+        self.angularoffset = angularoffset
+
+        self.ts_ta = None
         self.data_queue = mp.Queue()
         self.data_d = None
-        self.dataplotts = None
-        self.dataplotind = None
+        self.datalastts = None
         self.iter_count = 0
         self.serial_dir = DIRCONFN(
             osp.dirname(osp.dirname(osp.abspath(__file__))),
@@ -51,41 +66,33 @@ class productvis():
             PRODUCTVISSERIAL,
         )
 
-        self.ts_ta = None
-        self.x_tra = None
-        self.y_tra = None
-        self.z_tra = None
-        self.r_trm = None
-        self.dirtup_ta = None      # [(phi, theta), ...] [rad], 2 d.p
-        self.cmap_trca = None      # (timestamp, maxNbin, RGBA)
-        self.datalen = None
-
-        self.x_ta = None
-        self.y_ta = None
-        self.z_ta = None
-        self.r_rm = None
-        self.dir_tup = None     # (phi, theta) [rad], 2 d.p
-        self.cmap_rca = None
-
-        self.ax_l = None        # list for axes to plot on
-        self.cmap_sm = pcm.ScalarMappable(cmap=_colormap)
-        self.plot_d = {}        # holds plots, keys are the direction tuples
-                                # (phi, theta) [rad]
-
         # initial data read
         print('initialising productvis data')
         self._queue_data(_initreaddatatimes)
-        self._get_data()
+        self._get_data(True)
+
+        # initial obj creation
+        self.arrayvis_l = []    # array objects
+        for i, datakey in enumerate(datakey_l):
+            self.arrayvis_l.append(arrayvis(self, datakey, timeobj, _arraycmap_l[i]))
+        self.productmaskvis_l = []    # product mask objects
+        for i, (key, value) in enumerate(productkey_d.items()):
+            self.productmaskvis_l.append(
+                productmaskvis(self, key, value, timeobj, _productmaskcmap_l[i])
+            )
+
+        self.obj_l = self.arrayvis_l + self.productmaskvis_l
+
 
     def init_vis(self, axl):
-        # only performing plots on 3d axis
-        self.ax_l = list(filter(lambda x: '3d' in x.name, axl))
+        for obj in self.obj_l:
+            obj.init_vis(axl)
 
     def _queue_data(self, n):
         for i in range(n):
             # serialising data and writing to file
-            data_d = _dataf(
-                self.lidarname, smmpl_reader,
+            data_d = product_calc(
+                self.lidarname, self.mplreader,
                 starttime=self.starttime, endtime=self.endtime,
                 verbboo=False
             )
@@ -100,7 +107,7 @@ class productvis():
             self.starttime += _readduration
             self.endtime += _readduration
 
-    def _get_data(self):
+    def _get_data(self, init_boo):
         '''
         gets the data from data_queue and initiates a _queue_data if the queue
         size is less than _initreaddatatimes,
@@ -112,6 +119,9 @@ class productvis():
             self.data_d = pickle.load(f)
         os.remove(serial_dir)   # deleting temp file
 
+        # setting new array data; dependent on outputs of product_calc
+        self.array_d = self.data_d[_productarraykey]
+
         # starting data queue if the data stock is low
         if self.data_queue.qsize() < _initreaddatatimes:
             self._queue_data(_initreaddatatimes)
@@ -122,79 +132,37 @@ class productvis():
                 args=(_initreaddatatimes, )
             ).start()
 
-        # storing new values
-        self.ts_ta = self.data_d['Timestamp']
-        self.r_trm = self.data_d['r_trm']
-
-        data_trca = self.data_d[self.datakey]
-        data_trca[data_trca < 0] = 0  # baseline negative values
-        data_trca += 1
-        data_trca = np.log(data_trca)  # log scaling for vis
-        data_trca /= _nrbmaxthres  # setting upper limit
-        data_trca[data_trca > 1] = 1
-        self.cmap_trca = self.cmap_sm.to_rgba(data_trca)
-        self.cmap_trca = self.cmap_trca[..., :3]
-        ## setting variable alpha
-        self.cmap_trca = np.append(self.cmap_trca, data_trca[..., None], axis=-1)
-        ## adjusting alpha for visibility
-        self.cmap_trca[..., 3] *= _alphascale
-
-        r_tra = self.data_d['r_tra']
-        theta_ta = self.data_d['theta_ta']
-        phi_ta = self.data_d['phi_ta']
-        self.x_tra = r_tra * np.sin(theta_ta)[:, None] * np.cos(phi_ta)[:, None]
-        self.y_tra = r_tra * np.sin(theta_ta)[:, None] * np.sin(phi_ta)[:, None]
-        self.z_tra = r_tra * np.cos(theta_ta)[:, None]
-        self.dirtup_ta = [tuple(dir_l) for dir_l in
-                          np.stack([phi_ta, theta_ta], axis=1)]
-
         # resetting the indices
-        self.dataplotind = 0
-        self.dataplotts = self.ts_ta[0]
-        self.datalen = len(self.ts_ta)
+        self.ts_ta = self.data_d[_productarraykey][_arraytimestampkey]
+        self.datalastts = self.ts_ta[-1]
+
+        # let objects retrieve new data
+        if not init_boo:
+            for obj in self.obj_l:
+                obj.get_data()
 
     def update_ts(self):
-        while self.to.get_ts() >= self.dataplotts:
-            # indexing storage
-            self.r_rm = self.r_trm[self.dataplotind]
-            self.x_ra = self.x_tra[self.dataplotind][self.r_rm]
-            self.y_ra = self.y_tra[self.dataplotind][self.r_rm]
-            self.z_ra = self.z_tra[self.dataplotind][self.r_rm]
-            self.cmap_rca = self.cmap_trca[self.dataplotind][self.r_rm]
-            self.dir_tup = self.dirtup_ta[self.dataplotind]
+        # updating objects
+        for obj in self.obj_l:
+            obj.update_ts()
 
-            # plotting
-            self._plot_data()
-
-            # update the next timestamp
-            self.dataplotind += 1
-            if self.dataplotind >= self.datalen:
-                self._get_data()
-            self.dataplotts = self.ts_ta[self.dataplotind]
+        # grabbing new data and running update timestamp again if the
+        # previous data set could not encompass the set
+        if self.to.get_ts() >= self.datalastts:
+            self._get_data(False)
+            self.update_ts()
 
     def update_toseg(self):
         pass
 
-    def _plot_data(self):
-        for ax in self.ax_l:
-            # remove previous plots
-            try:
-                self.plot_d[self.dir_tup].remove()
-            except KeyError:
-                pass
 
-            # plot new plot
-            self.plot_d[self.dir_tup] = ax.scatter(
-                self.x_ra, self.y_ra, self.z_ra,
-                c=self.cmap_rca,
-                s=_scatterpointsize,
-            )
-
-
+# testing
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
 
-    from ...smmpl_opcodes.scanpat_calc.timeobj import timeobj
+    from ..solaris_opcodes.file_readwrite import smmpl_reader
+    from ..smmpl_opcodes.scanpat_calc.timeobj import timeobj
 
 
     to = timeobj(
@@ -206,7 +174,12 @@ if __name__ == '__main__':
         None
     )
     pv = productvis(
-        'SNR_tra', to, 'smmpl_E2', smmpl_reader
+        to,
+        'smmpl_E2', smmpl_reader,
+        angularoffset=ANGOFFSET,
+        datakey_l=[
+            'SNR_tra'
+        ]
     )
 
     # figure creation
