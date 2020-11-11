@@ -144,6 +144,8 @@ class visualiser:
 
             if tosegstop_boo:              # stop plotting
                 self.animation3d.event_source.stop()
+                if self.plot2d:
+                    self.animation2d.event_source.stop()
 
         # update for toseg
             else:

@@ -55,8 +55,7 @@ _cone_height = 20        # [km]
 
 ## other params
 _readduration = pd.Timedelta(1, 'd')
-_initreaddatatimes = 5
-_inittimeout = 2                # [s]
+_initreaddatatimes = 2
 
 
 # main class
