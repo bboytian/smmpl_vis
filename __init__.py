@@ -88,10 +88,10 @@ class visualiser:
 
         self.ax3d_l = [ax3d]
         self.fig3d_l = [fig3d]
-        self.tstxt_l = [ax3d.text(
-            0, 0, CURLYL, self.to.get_ts()
-        )
+        self.tstxt_l = [ax3d.text(0, 0, CURLYL, self.to.get_ts())
                         for i, ax3d in enumerate(self.ax3d_l)]
+        for ax3d in self.ax3d_l:
+            ax3d.view_init(VIEWELEVATION, VIEWAZIMUTHSTART)
 
         ## visobjects init_vis
         for visobject in self.visobjects:
@@ -168,7 +168,6 @@ class visualiser:
                 self.viewazimuth += VIEWROTDISCRETE
                 if self.viewazimuth > 360:
                     self.viewazimuth -= 360
-                ax3d.view_init(VIEWELEVATION, self.viewazimuth)
 
         for visobject in self.visobjects:
             visobject.update_ts()

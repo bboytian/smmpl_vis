@@ -18,7 +18,7 @@ _arraycmap_l = [
     'Blues'
 ]
 _productmaskcmap_l = [
-    None
+    'plasma'
 ]
 
 _readduration = pd.Timedelta(30, 'm')
@@ -35,7 +35,12 @@ class productvis():
             timeobj,
 
             lidarname, mplreader,
-            angularoffset=0,
+            timestep, rangestep,
+            angularoffset,
+            combpolboo,
+
+            pixelsize, gridlen,
+            latitude, longitude, elevation,
 
             datakey_l=[],
             productkey_d={},
@@ -53,7 +58,16 @@ class productvis():
 
         self.lidarname = lidarname
         self.mplreader = mplreader
+        self.timestep = timestep
+        self.rangestep = rangestep
         self.angularoffset = angularoffset
+        self.combpolboo = combpolboo
+
+        self.pixelsize = pixelsize
+        self.gridlen = gridlen,
+        self.latitude = latitude
+        self.longitude = longitude
+        self.elevation = elevation
 
         self.ts_ta = None
         self.data_queue = mp.Queue()
@@ -94,6 +108,15 @@ class productvis():
             data_d = product_calc(
                 self.lidarname, self.mplreader,
                 starttime=self.starttime, endtime=self.endtime,
+                timestep=self.timestep, rangestep=self.rangestep,
+                angularoffset=self.angularoffset,
+
+                combpolboo=self.combpolboo,
+
+                pixelsize=self.pixelsize, gridlen=self.gridlen,
+                latitude=self.latitude, longitude=self.longitude,
+                elevation=self.elevation,
+
                 verbboo=False
             )
             serial_dir = self.serial_dir.format(self.iter_count)

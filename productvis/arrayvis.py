@@ -7,7 +7,6 @@ from ..global_imports.smmpl_vis import *
 
 # params
 _nrbmaxthres = np.log(500 + 1)
-# _nrbmaxthres = 20
 _alphascale = 0.5
 _scatterpointsize = 150
 
@@ -33,9 +32,9 @@ class arrayvis():
         self.cmap_trca = None      # (timestamp, maxNbin, RGBA)
         self.datalen = None
 
-        self.x_ta = None
-        self.y_ta = None
-        self.z_ta = None
+        self.x_ra = None
+        self.y_ra = None
+        self.z_ra = None
         self.r_rm = None
         self.dir_tup = None     # (phi, theta) [rad], 2 d.p
         self.cmap_rca = None
@@ -60,6 +59,8 @@ class arrayvis():
         # storing new values
         self.ts_ta = self.mainclass.array_d['Timestamp']
         self.r_trm = self.mainclass.array_d['r_trm']
+
+        # resetting indices
         self.dataplotind = 0
         self.dataplotts = self.ts_ta[0]
         self.datalen = len(self.ts_ta)

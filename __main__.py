@@ -10,8 +10,9 @@ from .global_imports.smmpl_vis import *
 from .productvis import productvis
 from .scanpatvis import scanpatvis
 
-from .smmpl_opcodes.global_imports.params_smmpl_opcodes import SEGDELTA
 from .smmpl_opcodes import scanpat_calc as spc
+from .smmpl_opcodes.global_imports.params_smmpl_opcodes import SEGDELTA, \
+    LIDARNAME, ANGOFFSET, LATITUDE, LONGITUDE, ELEVATION
 from .solaris_opcodes.file_readwrite.mpl_reader import smmpl_reader
 
 
@@ -55,14 +56,20 @@ def main(
     productcalc_vis = productvis(
         to,
 
-        'smmpl_E2', smmpl_reader,
-        angularoffset=ANGOFFSET,
+        LIDARNAME, smmpl_reader,
+        TIMESTEP, RANGESTEP,
+        ANGOFFSET,
+
+        COMBPOLBOO,
+
+        PIXELSIZE, GRIDLEN,
+        LATITUDE, LONGITUDE, ELEVATION,
 
         datakey_l=[
-            'SNR2_tra'
+            # 'SNR2_tra'
         ],
         productkey_d={
-            # 'cloud': 'cloud_mask'
+            'cloud': 'cloud_mask'
         }
     )
 
@@ -74,7 +81,7 @@ def main(
     vis = visualiser(  # this runs the animation straight away
         to,
         interval,
-        scanpatcalc_vis,
+        # scanpatcalc_vis,
         productcalc_vis
     )
 
