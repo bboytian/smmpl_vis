@@ -9,6 +9,7 @@ from . import visualiser
 from .global_imports.smmpl_vis import *
 from .productvis import productvis
 from .scanpatvis import scanpatvis
+from .staticvis import staticvis
 
 from .smmpl_opcodes import scanpat_calc as spc
 from .smmpl_opcodes.global_imports.params_smmpl_opcodes import SEGDELTA, \
@@ -76,13 +77,20 @@ def main(
     ## scanpat_calc
     scanpatcalc_vis = scanpatvis(to)
 
+    ## static shapes for visualisation
+    static_vis = staticvis(
+        PIXELSIZE, GRIDLEN,
+        plotbot_boo=True
+    )
+
 
     # begin animation
-    vis = visualiser(  # this runs the animation straight away
+    visualiser(  # this runs the animation straight away
         to,
         interval,
-        # scanpatcalc_vis,
-        productcalc_vis
+        # scanpatvis=scanpatcalc_vis,
+        productvis=productcalc_vis,
+        staticvis=static_vis,
     )
 
 
