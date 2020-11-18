@@ -8,7 +8,7 @@ _2dlinewidth = 1
 _linecolor = 'k'
 _linestyle = '-'
 
-_3dgridheight = 20
+_3dgridheight = 15
 
 
 # class

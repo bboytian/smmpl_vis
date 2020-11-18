@@ -37,8 +37,9 @@ def main(
         interval=_interval,
 ):
     # clearing all temporary serial files
-    for f in FINDFILESFN(SCANPATVISSERIAL, TEMPSERIALDIR) \
-        + FINDFILESFN(PRODUCTVISSERIAL, TEMPSERIALDIR):
+    tempdir = DIRCONFN(osp.dirname(osp.abspath(__file__)), TEMPSERIALDIR)
+    for f in FINDFILESFN(SCANPATVISSERIAL, tempdir) \
+        + FINDFILESFN(PRODUCTVISSERIAL, tempdir):
         os.remove(f)
 
     # vis objects under main thread

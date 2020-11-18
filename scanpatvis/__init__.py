@@ -58,6 +58,14 @@ _readduration = pd.Timedelta(1, 'd')
 _initreaddatatimes = 2
 
 
+# supp class
+class _background_process(object):
+    def __init__(self):
+        pass
+    def is_alive(self):
+        return False
+
+
 # main class
 class scanpatvis:
 
@@ -73,6 +81,7 @@ class scanpatvis:
 
         self.iter_count = 0
         self.data_queue = mp.Queue()  # contains the filenames to be serialised
+        self.bg_process = _background_process()
         self.serial_dir = DIRCONFN(
             osp.dirname(osp.dirname(osp.abspath(__file__))),
             TEMPSERIALDIR,
@@ -227,18 +236,20 @@ class scanpatvis:
         '''
         # grabbing new data from queue
         serial_dir = self.data_queue.get()
+        print(f'reading productvis from {serial_dir}')
         with open(serial_dir, 'rb') as f:
             _, self.ps = pickle.load(f)
-        os.remove(serial_dir)   # deleting temp file
 
         # starting data queue if the data stock is low
-        if self.data_queue.qsize() < _initreaddatatimes:
+        if self.data_queue.qsize() < _initreaddatatimes\
+           and not self.bg_process.is_alive():
             # starting multiprocess
             print('starting scanpatvis background data retrieval')
-            mp.Process(
+            self.bg_process = mp.Process(
                 target=self._queue_data,
                 args=(_initreaddatatimes, )
-            ).start()
+            )
+            self.bg_process.start()
 
         # retrieving
         self.grid_lst_ps = self.ps.grid_lst

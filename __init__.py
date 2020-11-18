@@ -1,4 +1,5 @@
 # imports
+from copy import deepcopy
 import datetime as dt
 import math
 import time
@@ -43,7 +44,7 @@ class visualiser:
         self.interval = interval
 
         self.realtime_boo = REALTIMEBOO
-        self.utcinfo = self.to.get_utcinfo()
+        self.utcinfo = timeobj.get_utcinfo()
 
         self.viewazimuth = VIEWAZIMUTHSTART
 
@@ -53,12 +54,20 @@ class visualiser:
             staticvis
         ]
         self.visobjects = [x for x in self.visobjects if x]
+        self.scanpatvis = scanpatvis
+        self.ps = None
+        self.productvis = productvis
+        self.staticvis = staticvis
 
+        self.ax3d = None
+        self.ax2d_l = []
+        self.fig3d = None
+        self.fig2d_l = []
+        self.animation3d = None
+        self.animation2d_l = []
 
-        # init
-
-        ## figure creation
-        ### 3d plot
+        # figure creation
+        ## 3d plot
         fig3d = plt.figure(figsize=(10, 10), constrained_layout=True)
         ax3d = fig3d.add_subplot(111, projection='3d')
         ax3d.pbaspect = [SCALE, SCALE, SCALE]
@@ -68,21 +77,22 @@ class visualiser:
         ax3d.set_ylim([-CURLYL/2, CURLYL/2])
         ax3d.set_zlim([0, CURLYL])
 
-        self.ax3d_l = [ax3d]
-        self.fig3d_l = [fig3d]
+        self.ax3d = ax3d
+        self.fig3d = fig3d
 
-        ### grid projection visualisation plot
-        axs2d = []
-        if scanpatvis:
+        ## grid projection visualisation plot
+        self.ax2d_l = []
+        if self.scanpatvis:
+            self.ps = self.scanpatvis.ps
             lengrid_lst_tg = len(self.ps.grid_lst)
             ax2dnum = math.ceil(math.sqrt(lengrid_lst_tg))
             fig2d, axs2d = plt.subplots(ax2dnum, ax2dnum, figsize=(8, 10))
             try:                    # handles the event where we only have one grid
-                axs2d = axs2d.flatten()
+                self.ax2d_l += list(axs2d.flatten())
             except AttributeError:
-                axs2d = [axs2d]
+                self.ax2d_l.append(axs2d)
             for i in range(lengrid_lst_tg):
-                ax = axs2d[i]
+                ax = self.ax2d_l[i]
                 ax.set_xlabel('South -- North')
                 ax.set_ylabel('East -- West')
                 axlim = self.ps.grid_lst[i].l/2 * 1.2
@@ -90,42 +100,35 @@ class visualiser:
                 ax.set_ylim([-axlim, axlim])
                 ax.margins(0)
 
-        ### projection of products
-        if staticvis and productvis:
+        ## projection of products
+        if self.staticvis and self.productvis:
             figprod2d, axprod2d = plt.subplots()
-            axprod2d.set_xlim([-staticvis.axlim, staticvis.axlim])
-            axprod2d.set_ylim([-staticvis.axlim, staticvis.axlim])
-            axs2d.append(axprod2d)
+            axprod2d.set_xlim([-self.staticvis.axlim, self.staticvis.axlim])
+            axprod2d.set_ylim([-self.staticvis.axlim, self.staticvis.axlim])
+            self.ax2d_l.append(axprod2d)
 
-        self.fig2d_l = []
-        if scanpatvis:
+        if self.scanpatvis:
             self.fig2d_l.append(fig2d)
-        elif staticvis and productvis:
+        if self.staticvis and self.productvis:
             self.fig2d_l.append(figprod2d)
 
-        ## meta initialisation
-        if staticvis:
-            timepos = staticvis.axlim
-        else:
-            timepos = 0
-        self.tstxt_l = [ax3d.text(timepos, timepos, CURLYL, self.to.get_ts())
-                        for i, ax3d in enumerate(self.ax3d_l)]
-        for ax3d in self.ax3d_l:
-            ax3d.view_init(VIEWELEVATION, VIEWAZIMUTHSTART)
+        # meta initialisation
+        self.fig3d.suptitle(self.to.get_ts())
+        for fig in self.fig2d_l:
+            fig.suptitle(self.to.get_ts())
+        self.ax3d.view_init(VIEWELEVATION, VIEWAZIMUTHSTART)
 
-        ## visobjects init_vis
+        # visobjects init_vis
         for visobject in self.visobjects:
-            visobject.init_vis([ax3d, *axs2d])
+            visobject.init_vis([ax3d, *self.ax2d_l])
 
-
-        # animate
+        # animation object creation
         self.animation3d = pan.FuncAnimation(
-            fig3d, self.update,
+            self.fig3d, self.update,
             interval=self.interval,
             frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
         )
 
-        self.animation2d_l = []
         for fig in self.fig2d_l:
             self.animation2d_l.append(pan.FuncAnimation(
                 fig, self.update,
@@ -133,20 +136,31 @@ class visualiser:
                 frames=np.arange(int(self.to.Deltatime/self.to.deltatime))
             ))
 
-        # save
+
+        # animate
+
+        # showing plot
+        if not SAVEANIMATION2D and not SAVEANIMATION3D:
+            plt.show()
+
+        # saving file
         if SAVEANIMATION3D:
             self.animation3d.save(
-                DIRCONFN(SAVEDIR, SAVEFILE.format(SAVE3DNAME)),
+                DIRCONFN(SAVEDIR, SAVEFILE.format(
+                    self.to.starttime, self.to.endtime, SAVE3DNAME
+                )),
                 'ffmpeg', fps=VIDEOFPS
             )
-        for i, animation2d in enumerate(self.animation2d_l):
-            if SAVEANIMATION2D:
-                self.animation2d.save(
-                    DIRCONFN(SAVEDIR, SAVEFILE.format(SAVE2DNAME.format(i))),
-                    'ffmpeg', fps=VIDEOFPS
-                )
 
-        plt.show()
+        if SAVEANIMATION2D:
+            animation2d = self.animation2d_l[SAVE2DIND]
+            animation2d.save(
+                DIRCONFN(SAVEDIR, SAVEFILE.format(
+                    self.to.starttime, self.to.endtime, SAVE2DNAME.format(SAVE2DIND)
+                )),
+                'ffmpeg', fps=VIDEOFPS
+            )
+
 
     def update(self, scapegoat):
         '''
@@ -185,21 +199,18 @@ class visualiser:
 
     def update_ts(self):
 
-        for ax3d in self.ax3d_l:
-            if ROTATE3DFIG:
-                self.viewazimuth += VIEWROTDISCRETE
-                if self.viewazimuth > 360:
-                    self.viewazimuth -= 360
+        if ROTATE3DFIG:
+            self.viewazimuth += VIEWROTDISCRETE
+            if self.viewazimuth > 360:
+                self.viewazimuth -= 360
+            self.ax3d.view_init(VIEWELEVATION, self.viewazimuth)
 
         for visobject in self.visobjects:
             visobject.update_ts()
 
-        for tstxt in self.tstxt_l:
-            tstxt.remove()
-        self.tstxt_l = [ax3d.text(
-            0, 0, CURLYL, self.to.get_ts()
-        )
-                        for i, ax3d in enumerate(self.ax3d_l)]
+        self.fig3d.suptitle(self.to.get_ts())
+        for fig in self.fig2d_l:
+            fig.suptitle(self.to.get_ts())
 
     def update_toseg(self):
         for visobject in self.visobjects:

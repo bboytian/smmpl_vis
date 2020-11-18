@@ -41,7 +41,8 @@ class productmaskvis():
         self.cmapbot_lca = None
         self.cmaptop_lca = None
 
-        self.ax_l = None        # list for axes to plot on
+        self.ax3d_l = None        # list for axes to plot on
+        self.ax2d_l = None        # list for axes to plot on
         self.cmap_sm = pcm.ScalarMappable(cmap=colormap)
         self.plot_d = {}        # holds plots, keys are the direction tuples
                                 # ((phi, theta), <descrip>) [rad]
@@ -56,7 +57,9 @@ class productmaskvis():
 
     def init_vis(self, axl):
         # only performing plots on 3d axis
-        self.ax_l = list(filter(lambda x: '3d' in x.name, axl))
+        self.ax3d_l = list(filter(lambda x: '3d' in x.name, axl))
+        self.ax2d_l = list(filter(lambda x: '3d' not in x.name, axl))
+        self.plot_d = {ax: {} for ax in self.ax3d_l + self.ax2d_l}
 
     def get_data(self):
         # storing new values
@@ -114,19 +117,18 @@ class productmaskvis():
         pass
 
     def _plot_data(self):
-
-        for ax in self.ax_l:
+        for ax in self.ax3d_l:
             # remove previous plots
             try:
-                self.plot_d[self.botkey].remove()
-                self.plot_d[self.topkey].remove()
+                self.plot_d[ax][self.botkey].remove()
+                self.plot_d[ax][self.topkey].remove()
             except KeyError:
                 pass
 
             # plot new plot
 
             ## product bottom
-            self.plot_d[self.botkey] = ax.scatter(
+            self.plot_d[ax][self.botkey] = ax.scatter(
                 self.xbot_la, self.ybot_la, self.zbot_la,
                 c=self.cmapbot_lca,
                 s=_scatterpointsize,
@@ -134,8 +136,34 @@ class productmaskvis():
             )
 
             ## product top
-            self.plot_d[self.topkey] = ax.scatter(
+            self.plot_d[ax][self.topkey] = ax.scatter(
                 self.xtop_la, self.ytop_la, self.ztop_la,
+                c=self.cmaptop_lca,
+                s=_scatterpointsize,
+                marker=_prodtopmarker,
+            )
+
+        for ax in self.ax2d_l:
+            # remove previous plots
+            try:
+                self.plot_d[ax][self.botkey].remove()
+                self.plot_d[ax][self.topkey].remove()
+            except KeyError:
+                pass
+
+            # plot new plot
+
+            ## product bottom
+            self.plot_d[ax][self.botkey] = ax.scatter(
+                self.xbot_la, self.ybot_la,
+                c=self.cmapbot_lca,
+                s=_scatterpointsize,
+                marker=_prodbotmarker,
+            )
+
+            ## product top
+            self.plot_d[ax][self.topkey] = ax.scatter(
+                self.xtop_la, self.ytop_la,
                 c=self.cmaptop_lca,
                 s=_scatterpointsize,
                 marker=_prodtopmarker,
