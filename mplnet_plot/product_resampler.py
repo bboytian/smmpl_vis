@@ -17,25 +17,26 @@ _prodresampler_vfunc = np.vectorize(_prodresampler_func, excluded=['z_ra'])
 
 # main func
 def main(
-        productmask_tl2a, resamplez_tra,
+        productmask_tl3a, resamplez_tra,
 ):
     '''
     resamples the product mask on to the new resampled work array
 
     Parameters
-        productmask_tl2a (np.ndarray): (time, max number of layers, 2(cldbot, cldtop))
+        productmask_tl3a (np.ndarray):
+            (time, max number of layers, 2(cldbot, cldpeak, cldtop))
         resamplez_tra (np.ndarray): resampled altitude array with time and range axis
     Return
-        resampleprodmask_tl2a (np.ndarray): resampled product heights for
-                                            productmask_tl2a
+        resampleprodmask_tl3a (np.ndarray): resampled product heights for
+                                            productmask_tl3a
         resampleprodmask_tra (np.ndarray): boolean array indicating the mask of the
                                            product
     '''
     # resampling heights
-    resampleprodmask_tl2a = np.array([
+    resampleprodmask_tl3a = np.array([
         _prodresampler_vfunc(
             z_ra=z_ra,
-            height=productmask_tl2a[i]
+            height=productmask_tl3a[i]
         )
         for i, z_ra in enumerate(resamplez_tra)
     ])
@@ -44,9 +45,9 @@ def main(
 
     ## retreiving cloud top and bottoms
     maxheight = resamplez_tra.max()
-    productmaskbot_tla = productmask_tl2a[..., 0]
+    productmaskbot_tla = productmask_tl3a[..., 0]
     productmaskbot_tla = np.nan_to_num(productmaskbot_tla, nan=maxheight)
-    productmasktop_tla = productmask_tl2a[..., 1]
+    productmasktop_tla = productmask_tl3a[..., 2]
     productmasktop_tla = np.nan_to_num(productmasktop_tla, nan=maxheight)
 
     ## creating mask layer by layer
@@ -59,7 +60,7 @@ def main(
 
     resampleprodmask_trm = resampleprodmask_trm.astype(np.bool)
 
-    return resampleprodmask_tl2a, resampleprodmask_trm
+    return resampleprodmask_tl3a, resampleprodmask_trm
 
 
 # testing

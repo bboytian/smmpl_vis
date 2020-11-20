@@ -33,7 +33,7 @@ _powernormconst = 0.5
 
 # main func
 def main(
-        work_ltra, productmask_ltl2a,
+        work_ltra, productmask_ltl3a,
         z_tra, r_trm, setz_a, setzind_ta,
         ts_ta,
 ):
@@ -51,6 +51,7 @@ def main(
 
     Parameters
         work_ltra (list): list of work_tra (np.ndarray) with time and range axis
+        productmask_ltl3a (np.ndarray): array containing product mask
 
         z_tra (np.ndarray): corresponding altitude array
         r_trm (np.ndarray): corresponding mask
@@ -58,7 +59,6 @@ def main(
         setzind_ta (np.ndarray): indexes for setz_a for the time axis for all tra
                                  arrays
         ts_ta (np.ndarray): timestamp array
-        product_d (dict): contains products for plotting
     '''
     # setting up figure
     nrows = len(work_ltra)
@@ -108,15 +108,15 @@ def main(
 
     # plotting product masks
     # iterate product types
-    for i, productmask_tl2a in enumerate(productmask_ltl2a):
+    for i, productmask_tl3a in enumerate(productmask_ltl3a):
         # resampling product location
-        resampleprodmask_tl2a, resampleprodmask_trm = product_resampler(
-            productmask_tl2a, resamplez_tra
+        resampleprodmask_tl3a, resampleprodmask_trm = product_resampler(
+            productmask_tl3a, resamplez_tra
         )
 
         # plotting on other work arrays axis
         for k in range(len(axs)-1):
-            for j in range(resampleprodmask_tl2a.shape[1]):
+            for j in range(resampleprodmask_tl3a.shape[1]):
 
                 # iterating plot properties
                 lind = j%len(_marker_l)
@@ -124,8 +124,8 @@ def main(
                 color = _color_l[i]
 
                 # plotting
-                resampleprodbot_tla = resampleprodmask_tl2a[:, j, 0]
-                resampleprodtop_tla = resampleprodmask_tl2a[:, j, 1]
+                resampleprodbot_tla = resampleprodmask_tl3a[:, j, 0]
+                resampleprodtop_tla = resampleprodmask_tl3a[:, j, 2]
                 axs[k].plot(
                     ts_ta, resampleprodbot_tla,
                     ts_ta, resampleprodtop_tla,
@@ -201,14 +201,14 @@ if __name__ == '__main__':
 
     ## product masks
     cloud_d = product_d['cloud']
-    cloudmask_tl2a = cloud_d['mask']
-    productmask_ltl2a = [
-        cloudmask_tl2a
+    cloudmask_tl3a = cloud_d['mask']
+    productmask_ltl3a = [
+        cloudmask_tl3a
     ]
 
     # plotting
     main(
-        work_ltra, productmask_ltl2a,
+        work_ltra, productmask_ltl3a,
         z_tra, r_trm, setz_a, setzind_ta,
         ts_ta,
     )
