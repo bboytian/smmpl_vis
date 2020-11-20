@@ -71,7 +71,7 @@ def main(
             # 'SNR2_tra'
         ],
         productkey_d={
-            'cloud': 'cloud_mask'
+            'cloud': 'mask'
         }
     )
 

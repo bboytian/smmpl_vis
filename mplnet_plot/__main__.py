@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
     ## product masks
     cloud_d = product_d['cloud']
-    cloudmask_tl2a = cloud_d['cloud_mask']
+    cloudmask_tl2a = cloud_d['mask']
     productmask_ltl2a = [
         cloudmask_tl2a
     ]
