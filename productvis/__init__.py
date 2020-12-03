@@ -9,6 +9,7 @@ np.seterr(all='ignore')     # choosing not to print any warnings
 import pandas as pd
 
 from .arrayvis import arrayvis
+from .pixelavgvis import pixelavgvis
 from .productmaskvis import productmaskvis
 from ..global_imports.smmpl_vis import *
 from ..solaris_opcodes.product_calc import main as product_calc
@@ -19,6 +20,9 @@ _arraycmap_l = [
     'Blues'
 ]
 _productmaskcmap_l = [
+    'plasma'
+]
+_pixelavgcmap_l = [
     'plasma'
 ]
 
@@ -53,11 +57,13 @@ class productvis():
 
             datakey_l=[],
             productkey_d={},
+            pixelavgkey_d={},
     ):
         '''
         This object will control the following sub objects.
         1. arrayvis: plot out the computed data arrays
         2. productmaskvis: plots out the mask for the computed products
+        3. pixelavgvis: plots out the averaged mask altitudes for each pixel
 
         It will also be incharge of grabbing data and passing it onto the other objects
         '''
@@ -104,8 +110,13 @@ class productvis():
             self.productmaskvis_l.append(
                 productmaskvis(self, key, value, timeobj, _productmaskcmap_l[i])
             )
+        self.pixelavgvis_l = []  # pixel averaged product mask objects
+        for i, (key, value) in enumerate(pixelavgkey_d.items()):
+            self.pixelavgvis_l.append(
+                pixelavgvis(self, key, value, timeobj, _pixelavgcmap_l[i])
+            )
 
-        self.obj_l = self.arrayvis_l + self.productmaskvis_l
+        self.obj_l = self.arrayvis_l + self.productmaskvis_l + self.pixelavgvis_l
 
 
     def init_vis(self, axl):
@@ -221,11 +232,14 @@ if __name__ == '__main__':
         elevation=70,
 
         datakey_l=[
-            # 'SNR_tra'
+            # 'SNR_tra',
         ],
         productkey_d={
-            'cloud': 'mask'
-        }
+            'cloud': 'mask',
+        },
+        pixelavgkey_d={
+            'cloud': 'pixel_bottom',
+        },
     )
 
     # figure creation
