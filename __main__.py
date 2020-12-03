@@ -61,7 +61,6 @@ def main(
         LIDARNAME, smmpl_reader,
         TIMESTEP, RANGESTEP,
         ANGOFFSET,
-
         COMBPOLBOO,
 
         PIXELSIZE, GRIDLEN,

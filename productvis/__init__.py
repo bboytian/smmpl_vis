@@ -5,6 +5,7 @@ import os.path as osp
 import pickle
 
 import numpy as np
+np.seterr(all='ignore')     # choosing not to print any warnings
 import pandas as pd
 
 from .arrayvis import arrayvis
@@ -72,7 +73,7 @@ class productvis():
         self.combpolboo = combpolboo
 
         self.pixelsize = pixelsize
-        self.gridlen = gridlen,
+        self.gridlen = gridlen
         self.latitude = latitude
         self.longitude = longitude
         self.elevation = elevation
@@ -126,7 +127,7 @@ class productvis():
                 latitude=self.latitude, longitude=self.longitude,
                 elevation=self.elevation,
 
-                verbboo=False
+                verbboo=True
             )
             serial_dir = self.serial_dir.format(self.iter_count)
             with open(serial_dir, 'wb') as f:
@@ -200,9 +201,9 @@ if __name__ == '__main__':
 
 
     to = timeobj(
-        pd.Timestamp('202008040800'),
-        pd.Timestamp('202008051100'),
-        8,
+        pd.Timestamp('202011251000'),
+        pd.Timestamp('202011251100'),
+        0,
         pd.Timedelta(1, 'm'),
         pd.Timedelta(30, 'm'),
         None
@@ -210,10 +211,21 @@ if __name__ == '__main__':
     pv = productvis(
         to,
         'smmpl_E2', smmpl_reader,
-        angularoffset=ANGOFFSET,
+        timestep=None, rangestep=None,
+
+        angularoffset=140.6,
+        combpolboo=True,
+
+        pixelsize=5, gridlen=3,
+        latitude=1.299119, longitude=103.771232,
+        elevation=70,
+
         datakey_l=[
-            'SNR_tra'
-        ]
+            # 'SNR_tra'
+        ],
+        productkey_d={
+            'cloud': 'mask'
+        }
     )
 
     # figure creation
@@ -230,7 +242,7 @@ if __name__ == '__main__':
 
     pv.init_vis([ax3d])
 
-    to.ts = LOCTIMEFN(pd.Timestamp('202008040830'), 8)  # fastforward the time
+    to.ts = LOCTIMEFN(pd.Timestamp('202011251100'), 0)  # fastforward the time
     pv.update_ts()
 
     plt.show()
