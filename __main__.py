@@ -63,15 +63,18 @@ def main(
         ANGOFFSET,
         COMBPOLBOO,
 
-        PIXELSIZE, GRIDLEN,
+        PIXELSIZE, GRIDLEN, MAXHEIGHT,
         LATITUDE, LONGITUDE, ELEVATION,
 
         datakey_l=[
             # 'SNR2_tra'
         ],
         productkey_d={
-            'cloud': 'mask'
-        }
+            'cloud': 'mask',
+        },
+        pixelavgkey_d={
+            'cloud': 'pixel_bottom',
+        },
     )
 
     ## scanpat_calc

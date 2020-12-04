@@ -26,7 +26,7 @@ _pixelavgcmap_l = [
     'plasma'
 ]
 
-_readduration = pd.Timedelta(60, 'm')
+_readduration = pd.Timedelta(30, 'm')
 _initreaddatatimes = 5
 
 _productarraykey = 'nrb'
@@ -52,7 +52,7 @@ class productvis():
             angularoffset,
             combpolboo,
 
-            pixelsize, gridlen,
+            pixelsize, gridlen, maxheight,
             latitude, longitude, elevation,
 
             datakey_l=[],
@@ -80,6 +80,7 @@ class productvis():
 
         self.pixelsize = pixelsize
         self.gridlen = gridlen
+        self.maxheight = maxheight
         self.latitude = latitude
         self.longitude = longitude
         self.elevation = elevation
@@ -108,12 +109,14 @@ class productvis():
         self.productmaskvis_l = []    # product mask objects
         for i, (key, value) in enumerate(productkey_d.items()):
             self.productmaskvis_l.append(
-                productmaskvis(self, key, value, timeobj, _productmaskcmap_l[i])
+                productmaskvis(self, key, value, timeobj, _productmaskcmap_l[i],
+                               maxheight)
             )
         self.pixelavgvis_l = []  # pixel averaged product mask objects
         for i, (key, value) in enumerate(pixelavgkey_d.items()):
             self.pixelavgvis_l.append(
-                pixelavgvis(self, key, value, timeobj, _pixelavgcmap_l[i])
+                pixelavgvis(self, key, value, timeobj, _pixelavgcmap_l[i],
+                            pixelsize, gridlen, maxheight)
             )
 
         self.obj_l = self.arrayvis_l + self.productmaskvis_l + self.pixelavgvis_l
@@ -138,7 +141,7 @@ class productvis():
                 latitude=self.latitude, longitude=self.longitude,
                 elevation=self.elevation,
 
-                verbboo=True
+                verbboo=False
             )
             serial_dir = self.serial_dir.format(self.iter_count)
             with open(serial_dir, 'wb') as f:
@@ -212,8 +215,8 @@ if __name__ == '__main__':
 
 
     to = timeobj(
-        pd.Timestamp('202011251000'),
-        pd.Timestamp('202011251100'),
+        pd.Timestamp('202011250000'),
+        pd.Timestamp('202011250030'),
         0,
         pd.Timedelta(1, 'm'),
         pd.Timedelta(30, 'm'),
@@ -227,7 +230,7 @@ if __name__ == '__main__':
         angularoffset=140.6,
         combpolboo=True,
 
-        pixelsize=5, gridlen=3,
+        pixelsize=5, gridlen=3, maxheight=15,
         latitude=1.299119, longitude=103.771232,
         elevation=70,
 
@@ -256,7 +259,7 @@ if __name__ == '__main__':
 
     pv.init_vis([ax3d])
 
-    to.ts = LOCTIMEFN(pd.Timestamp('202011251100'), 0)  # fastforward the time
+    to.ts = LOCTIMEFN(pd.Timestamp('202011250030'), 0)  # fastforward the time
     pv.update_ts()
 
     plt.show()

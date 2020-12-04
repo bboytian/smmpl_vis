@@ -19,6 +19,8 @@ class productmaskvis():
             self, mainclass,
             prodkey, prodval, timeobj,
             colormap,
+
+            maxheight
     ):
         self.mainclass = mainclass
         self.prodkey = prodkey
@@ -59,6 +61,8 @@ class productmaskvis():
         self.dataplotts = None
         self.dataplotind = None
 
+        self.maxheight = maxheight
+
         # initialisation
         self.get_data()
 
@@ -79,7 +83,9 @@ class productmaskvis():
         self.datalen = len(self.ts_ta)
 
         prodmask_tl3a = np.nan_to_num(self.prodmask_tl3a)
-        cmap_a = self.cmap_sm.to_rgba(prodmask_tl3a.flatten())
+        cmap_a = self.cmap_sm.to_rgba(
+            np.concatenate([prodmask_tl3a.flatten(), [0, self.maxheight]])
+        )[:-2]
         self.cmap_tl3ca = cmap_a.reshape([*prodmask_tl3a.shape, 4])
 
         ## setting variable alpha
