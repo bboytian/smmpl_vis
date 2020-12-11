@@ -163,13 +163,12 @@ if __name__ == '__main__':
     latitude, longitude = 1.299119, 103.771232  # [deg]
     elevation = 70                              # [m]
 
-
     # computing products
     product_d = product_calc(
         lidarname, mplreader,
         starttime=LOCTIMEFN('202010290000', 0),
-        endtime=LOCTIMEFN('202010291200', 0),
-        timestep=None, rangestep=None,
+        endtime=LOCTIMEFN('202010290100', 0),
+        timestep=None, rangestep=5,
         angularoffset=angularoffset,
 
         combpolboo=True,
