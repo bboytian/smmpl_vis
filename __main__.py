@@ -55,27 +55,27 @@ def main(
     # vis protocol object
 
     ## product_calc
-    productcalc_vis = productvis(
-        to,
+    # productcalc_vis = productvis(
+    #     to,
 
-        LIDARNAME, smmpl_reader,
-        TIMESTEP, RANGESTEP,
-        ANGOFFSET,
-        COMBPOLBOO,
+    #     LIDARNAME, smmpl_reader,
+    #     TIMESTEP, RANGESTEP,
+    #     ANGOFFSET,
+    #     COMBPOLBOO,
 
-        PIXELSIZE, GRIDLEN, MAXHEIGHT,
-        LATITUDE, LONGITUDE, ELEVATION,
+    #     PIXELSIZE, GRIDLEN, MAXHEIGHT,
+    #     LATITUDE, LONGITUDE, ELEVATION,
 
-        datakey_l=[
-            # 'SNR2_tra'
-        ],
-        productkey_d={
-            'cloud': 'mask',
-        },
-        pixelavgkey_d={
-            'cloud': 'pixel_bottom',
-        },
-    )
+    #     datakey_l=[
+    #         # 'SNR2_tra'
+    #     ],
+    #     productkey_d={
+    #         'cloud': 'mask',
+    #     },
+    #     pixelavgkey_d={
+    #         'cloud': 'pixel_bottom',
+    #     },
+    # )
 
     ## scanpat_calc
     scanpatcalc_vis = scanpatvis(to)
@@ -91,9 +91,9 @@ def main(
     visualiser(  # this runs the animation straight away
         to,
         interval,
-        # scanpatvis=scanpatcalc_vis,
-        productvis=productcalc_vis,
-        staticvis=static_vis,
+        scanpatvis=scanpatcalc_vis,
+        # productvis=productcalc_vis,
+        # staticvis=static_vis,
     )
 
 
