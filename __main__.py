@@ -1,7 +1,7 @@
 # imports
 import datetime as dt
-import multiprocessing as mp  # on unix this uses 'fork' program
 import os
+import os.path as osp
 
 import pandas as pd
 
@@ -91,7 +91,7 @@ def main(
     visualiser(  # this runs the animation straight away
         to,
         interval,
-        # scanpatvis=scanpatcalc_vis,
+        scanpatvis=scanpatcalc_vis,
         productvis=productcalc_vis,
         staticvis=static_vis,
     )
